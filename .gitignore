@@ -1,0 +1,25 @@
+# Maven
+target/
+pom-plugin.xml.releaseBackup
+release.properties
+
+# Logs de build local
+scripts/last-build.log
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.vscode/
+*.code-workspace
+
+# Cursor
+.cursor/
+
+# OS
+Thumbs.db
+.DS_Store

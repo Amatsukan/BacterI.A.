@@ -1,16 +1,15 @@
 package com.codingame.game;
 
-import com.codingame.gameengine.core.AbstractPlayer;
+import com.codingame.gameengine.core.AbstractMultiplayerPlayer;
 import com.codingame.gameengine.core.AbstractReferee;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.module.entities.GraphicEntityModule;
 import com.google.inject.Inject;
 
 import java.util.List;
-import java.util.ArrayList;
 
 // 1. A Classe do Jogador (Guarda o estado de cada Bot)
-class Player extends AbstractPlayer {
+class Player extends AbstractMultiplayerPlayer {
     int energy;
     int expectedOutputLines = 1; // O jogador deve devolver 1 linha por turno
 
