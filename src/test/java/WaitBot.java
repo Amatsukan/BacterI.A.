@@ -1,34 +1,33 @@
 import java.util.Scanner;
 
 /**
- * Bot mínimo de teste: lê o protocolo do Referee e responde sempre WAIT.
- * Usado pelo Main.java para simular partidas locais.
- *
- * Protocolo de input (definido em Referee.java):
- *   Init   : <mapSize>
- *   Turno  : <myEnergy> <oppEnergy>
- *              <visibleEntitiesCount>
- *              [<entidade> ...] (uma linha por entidade)
- * Output   : 1 linha — "WAIT" (ou acções separadas por ";")
+ * Bot minimo de teste: le o protocolo do Referee e responde WAIT.
  */
 public class WaitBot {
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
 
-        int mapSize = Integer.parseInt(in.nextLine().trim());
-        System.err.println("[WaitBot] mapSize=" + mapSize);
+        // Init
+        String[] initLine = in.nextLine().trim().split(" ");
+        int mapSize = Integer.parseInt(initLine[0]);
+        int myIndex = Integer.parseInt(initLine[1]);
+        int spotCount = Integer.parseInt(in.nextLine().trim());
+        for (int i = 0; i < spotCount; i++) in.nextLine();
 
+        System.err.println("[WaitBot] mapSize=" + mapSize + " myIndex=" + myIndex + " spots=" + spotCount);
+
+        // Game loop
         while (in.hasNextLine()) {
-            String[] energyLine = in.nextLine().trim().split(" ");
-            int myEnergy  = Integer.parseInt(energyLine[0]);
-            int oppEnergy = Integer.parseInt(energyLine[1]);
+            String eLine = in.nextLine().trim();
+            if (eLine.isEmpty()) continue;
+            String[] eParts = eLine.split(" ");
+            int myEnergy = Integer.parseInt(eParts[0]);
+            int oppEnergy = Integer.parseInt(eParts[1]);
 
-            int visible = Integer.parseInt(in.nextLine().trim());
-            for (int i = 0; i < visible; i++) {
-                in.nextLine();
-            }
+            int entityCount = Integer.parseInt(in.nextLine().trim());
+            for (int i = 0; i < entityCount; i++) in.nextLine();
 
-            System.err.println("[WaitBot] turn myE=" + myEnergy + " oppE=" + oppEnergy);
+            System.err.println("[WaitBot] energy=" + myEnergy + " entities=" + entityCount);
             System.out.println("WAIT");
             System.out.flush();
         }

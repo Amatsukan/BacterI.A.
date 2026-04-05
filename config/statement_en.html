@@ -1,56 +1,129 @@
-<!-- Enunciado do BacterI.A. — versão EN -->
 <div id="statement_back" class="statement_back" style="display:none"></div>
 <div class="statement-body">
 
-  <!-- ==================== GOAL ==================== -->
+  <!-- ======================== GOAL ======================== -->
   <div class="statement-section statement-goal">
     <h1><span class="icon icon-goal">&nbsp;</span><span>The Goal</span></h1>
     <div class="statement-goal-content">
-      Conquer the Petri dish. Expand your bacterial colony, harvest nutrients and
-      eliminate your opponent's cells before the turn limit runs out.
+      Conquer the Petri dish! Expand your bacterial colony, harvest nutrients,
+      and eliminate your opponent's cells before the turn limit runs out.
     </div>
   </div>
 
-  <!-- ==================== RULES ==================== -->
+  <!-- ======================== RULES ======================== -->
   <div class="statement-section statement-rules">
     <h1><span class="icon icon-rules">&nbsp;</span><span>Rules</span></h1>
     <div class="statement-rules-content">
+
+      <h3>The Map</h3>
       <p>
-        Two players start at opposite corners of a <b>64×64</b> grid, each with
-        <b>1 cell</b> and <b>20 energy</b>.
+        A <b>64 &times; 64</b> square grid. Player&nbsp;0 starts with <b>1 cell</b>
+        at <const>(0, 0)</const> (top-left) and Player&nbsp;1 at
+        <const>(63, 63)</const> (bottom-right).
+      </p>
+      <p>
+        <b>Nutrient Spots</b> are scattered symmetrically on the grid
+        (180&deg; rotational symmetry). Each spot has a type:
+      </p>
+      <table style="width:auto">
+        <tr><th>Type</th><th>Code</th><th>Total Energy</th></tr>
+        <tr><td>Small</td><td>1</td><td>10</td></tr>
+        <tr><td>Medium</td><td>2</td><td>30</td></tr>
+        <tr><td>Large</td><td>3</td><td>70</td></tr>
+      </table>
+      <p>
+        If one of your cells sits on a nutrient spot, it automatically
+        <b>extracts 1&nbsp;energy per turn</b> until the spot is depleted.
       </p>
 
-      <h3>Actions (up to 5 per turn, separated by <code>;</code>)</h3>
-      <ul>
-        <li><b>EXPAND x y</b> — Cost: 2 energy. Creates a new cell adjacent (orthogonal or diagonal) to one of your existing cells.</li>
-        <li><b>ATTACK x y</b> — Cost: 2 energy. Attack an adjacent enemy cell. Succeeds if you have more allied neighbors around the target than the enemy does. Reward: +3 energy.</li>
-        <li><b>AUTOPHAGY x y</b> — Cost: 0. Sacrifice one of your own cells, recovering 1 energy.</li>
-        <li><b>WAIT</b> — Do nothing.</li>
-      </ul>
+      <h3>Energy</h3>
+      <p>
+        Starting energy is calculated as the distance from your base to the
+        nearest nutrient, plus a safety margin. Energy pays for actions.
+      </p>
 
-      <h3>Victory Conditions</h3>
-      <ul>
-        <li><b>Knockout</b>: Eliminate all enemy cells.</li>
-        <li><b>Turn limit</b>: After 200 turns, the player with the most cells wins.
-            Tiebreaker: banked energy / 10. Second tiebreaker: cells destroyed.</li>
-      </ul>
+      <h3>Actions (up to 5 per turn)</h3>
+      <table style="width:auto">
+        <tr><th>Action</th><th>Syntax</th><th>Cost</th><th>Effect</th></tr>
+        <tr>
+          <td><b>EXPAND</b></td><td><action>EXPAND x y</action></td><td>2</td>
+          <td>Create a new cell at <var>(x,y)</var>. Must be empty and adjacent
+              (orthogonal or diagonal) to one of your cells.</td>
+        </tr>
+        <tr>
+          <td><b>ATTACK</b></td><td><action>ATTACK x y</action></td><td>2</td>
+          <td>Attack an enemy cell at <var>(x,y)</var>. Succeeds if you have
+              <b>strictly more</b> allied neighbors around the target than the
+              defender. On success: enemy cell dies, you place your cell there,
+              and gain <b>+3 energy</b>. On failure: energy is still spent.</td>
+        </tr>
+        <tr>
+          <td><b>AUTOPHAGY</b></td><td><action>AUTOPHAGY x y</action></td><td>0</td>
+          <td>Sacrifice one of your own cells at <var>(x,y)</var>.
+              Recovers <b>+1 energy</b>.</td>
+        </tr>
+        <tr>
+          <td><b>WAIT</b></td><td><action>WAIT</action></td><td>0</td>
+          <td>Do nothing.</td>
+        </tr>
+      </table>
+      <p>
+        Separate multiple actions with <const>;</const>. Example:
+        <code>EXPAND 1 0; EXPAND 0 1; WAIT</code>
+      </p>
 
       <h3>Fog of War</h3>
       <p>
-        You only see enemies and neutral spots within a <b>3-cell radius</b> of your cells.
-        Your own half of the map is fully visible.
+        You always see <b>all nutrient spots on your own half</b> of the map.
+        Enemy cells and enemy-half spots are only visible if they are within
+        <b>Chebyshev distance 3</b> of any of your cells.
       </p>
+
+      <h3>Victory</h3>
+      <ul>
+        <li><b>Knockout</b>: Destroy all of the opponent's cells.</li>
+        <li><b>Turn limit</b> (500 turns): The player with the highest
+            score wins. Score = <const>cells &times; 100 + energy</const>.
+            Tiebreaker: total enemy cells destroyed.</li>
+      </ul>
     </div>
   </div>
 
-  <!-- ==================== PROTOCOL ==================== -->
+  <!-- ======================== EXPERT ======================== -->
+  <div class="statement-section statement-expert">
+    <h1><span class="icon icon-expert">&nbsp;</span><span>Expert Rules</span></h1>
+    <div class="statement-expert-content">
+      <ul>
+        <li>Both players' actions are collected simultaneously, then resolved in
+            player index order (Player&nbsp;0 first). Within one player's
+            actions, they are resolved left-to-right.</li>
+        <li>If both players try to EXPAND into the same empty cell in the same
+            turn, the first player to be resolved wins.</li>
+        <li>A failed EXPAND (occupied or non-adjacent) still costs energy.</li>
+        <li>A failed ATTACK (no majority) still costs energy.</li>
+        <li>A failed AUTOPHAGY (not your cell) does <b>not</b> cost/gain energy.</li>
+        <li>Passive nutrient extraction happens <b>after</b> all actions, once
+            per turn.</li>
+        <li>The map is symmetrical by 180&deg; rotation. Nutrient spots are
+            guaranteed reachable from both starting positions.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ======================== PROTOCOL ======================== -->
   <div class="statement-section statement-protocol">
-    <h1><span class="icon icon-protocol">&nbsp;</span><span>Game Input / Output</span></h1>
+    <h1><span class="icon icon-protocol">&nbsp;</span><span>Game Protocol</span></h1>
 
     <div class="blk">
-      <div class="title">Initialization input (once)</div>
+      <div class="title">Initialization input</div>
       <div class="statement-protocol-content">
-        <b>Line 1:</b> <var>mapSize</var> — size of the square grid (always 64).
+        <b>Line 1:</b> two integers <var>mapSize</var> <var>myIndex</var> &mdash;
+        grid size (always 64) and your player index (0 or 1).<br>
+        <b>Line 2:</b> <var>spotCount</var> &mdash; number of nutrient spots on
+        your half of the map.<br>
+        <b>Next <var>spotCount</var> lines:</b>
+        <var>x</var> <var>y</var> <var>type</var> &mdash; position and type code
+        (1=Small, 2=Medium, 3=Large).
       </div>
     </div>
 
@@ -58,24 +131,52 @@
       <div class="title">Input per turn</div>
       <div class="statement-protocol-content">
         <b>Line 1:</b> <var>myEnergy</var> <var>oppEnergy</var><br>
-        <b>Line 2:</b> <var>visibleEntitiesCount</var><br>
-        <b>Next <var>visibleEntitiesCount</var> lines:</b> entity data (to be defined).
+        <b>Line 2:</b> <var>entityCount</var><br>
+        <b>Next <var>entityCount</var> lines</b>, one of:<br>
+        <ul>
+          <li><const>MYCELL</const> <var>x</var> <var>y</var></li>
+          <li><const>OPPCELL</const> <var>x</var> <var>y</var></li>
+          <li><const>SPOT</const> <var>x</var> <var>y</var> <var>type</var>
+              <var>remainingEnergy</var></li>
+        </ul>
       </div>
     </div>
 
     <div class="blk">
-      <div class="title">Output per turn</div>
+      <div class="title">Output</div>
       <div class="statement-protocol-content">
-        A single line with up to 5 actions separated by <code>;</code>.<br>
-        Example: <code>EXPAND 1 0; WAIT</code>
+        A single line with up to 5 actions separated by <const>;</const>.<br>
+        Example: <code>EXPAND 1 0; ATTACK 3 4; WAIT</code>
       </div>
     </div>
 
     <div class="blk">
       <div class="title">Constraints</div>
       <div class="statement-protocol-content">
-        Response time per turn ≤ 50 ms (first turn ≤ 1000 ms).
+        Grid size = <const>64</const><br>
+        Max turns = <const>500</const><br>
+        Response time per turn &le; <const>50 ms</const><br>
+        First turn response time &le; <const>1000 ms</const>
       </div>
+    </div>
+  </div>
+
+  <!-- ======================== EXAMPLE ======================== -->
+  <div class="statement-section statement-examples">
+    <h1><span class="icon icon-example">&nbsp;</span><span>Example</span></h1>
+    <div class="statement-examples-content">
+      <p><b>Turn 1 input (Player 0):</b></p>
+<pre>15 20
+2
+MYCELL 0 0
+SPOT 5 3 1 10</pre>
+      <p><b>Your output:</b></p>
+<pre>EXPAND 1 0; EXPAND 1 1</pre>
+      <p>
+        You spend 4 energy to place two new cells. Your energy drops to 11.
+        Next turn you'll see 3 own cells and can keep expanding toward that
+        Small nutrient at (5,3).
+      </p>
     </div>
   </div>
 
