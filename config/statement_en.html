@@ -2,11 +2,17 @@
 <div class="statement-body">
 
   <!-- ======================== GOAL ======================== -->
-  <div class="statement-section statement-goal">
+  <div class="statement-section statement-goal statement-goal-medium">
     <h1><span class="icon icon-goal">&nbsp;</span><span>The Goal</span></h1>
     <div class="statement-goal-content">
-      Conquer the Petri dish! Expand your bacterial colony, harvest nutrients,
-      and eliminate your opponent's cells before the turn limit runs out.
+      <div style="margin-bottom:10px">
+        You control a <b>bacterial colony</b> on a <b>Petri dish</b>.
+        Expand your territory, harvest nutrient spots for energy,
+        and <b>eliminate all enemy cells</b> before the turn limit.
+      </div>
+      <div style="color:#8b949e">
+        The player with the most cells and energy at the end wins.
+      </div>
     </div>
   </div>
 
@@ -15,97 +21,175 @@
     <h1><span class="icon icon-rules">&nbsp;</span><span>Rules</span></h1>
     <div class="statement-rules-content">
 
-      <h3>The Map</h3>
-      <p>
-        A <b>64 &times; 64</b> square grid. Player&nbsp;0 starts with <b>1 cell</b>
-        at <const>(0, 0)</const> (top-left) and Player&nbsp;1 at
-        <const>(63, 63)</const> (bottom-right).
-      </p>
-      <p>
-        <b>Nutrient Spots</b> are scattered symmetrically on the grid
-        (180&deg; rotational symmetry). Each spot has a type:
-      </p>
-      <table style="width:auto">
-        <tr><th>Type</th><th>Code</th><th>Total Energy</th></tr>
-        <tr><td>Small</td><td>1</td><td>10</td></tr>
-        <tr><td>Medium</td><td>2</td><td>30</td></tr>
-        <tr><td>Large</td><td>3</td><td>70</td></tr>
-      </table>
-      <p>
-        If one of your cells sits on a nutrient spot, it automatically
-        <b>extracts 1&nbsp;energy per turn</b> until the spot is depleted.
-      </p>
+      <!-- The Map -->
+      <div style="margin-bottom:15px">
+        <h2 style="font-size:16px; color:#bac4cf; border-bottom:1px solid #30363d; padding-bottom:5px">
+          <span style="color:#22a1e4">&#9654;</span> The Map
+        </h2>
+        <ul>
+          <li>A <const>64 &times; 64</const> square grid.</li>
+          <li><b>Player&nbsp;0</b> starts with one cell at <const>(0,&thinsp;0)</const> (top-left).</li>
+          <li><b>Player&nbsp;1</b> starts with one cell at <const>(63,&thinsp;63)</const> (bottom-right).</li>
+          <li><b>Nutrient spots</b> are placed symmetrically (180&deg; rotation).</li>
+        </ul>
+      </div>
 
-      <h3>Energy</h3>
-      <p>
-        Starting energy is calculated as the distance from your base to the
-        nearest nutrient, plus a safety margin. Energy pays for actions.
-      </p>
+      <!-- Nutrients -->
+      <div style="margin-bottom:15px">
+        <h2 style="font-size:16px; color:#bac4cf; border-bottom:1px solid #30363d; padding-bottom:5px">
+          <span style="color:#2ecc71">&#9654;</span> Nutrient Spots
+        </h2>
+        <p>Each spot has a <b>type</b> that determines its total energy reserve:</p>
+        <table class="table-bordered" style="width:auto; margin:8px 0">
+          <thead><tr>
+            <th style="padding:4px 16px; text-align:center">Type</th>
+            <th style="padding:4px 16px; text-align:center">Code</th>
+            <th style="padding:4px 16px; text-align:center">Total Energy</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="padding:4px 16px; text-align:center"><span style="color:#2ecc71">&#9679;</span> Small</td>
+              <td style="padding:4px 16px; text-align:center"><const>1</const></td>
+              <td style="padding:4px 16px; text-align:center"><const>10</const></td>
+            </tr>
+            <tr>
+              <td style="padding:4px 16px; text-align:center"><span style="color:#f1c40f">&#9679;</span> Medium</td>
+              <td style="padding:4px 16px; text-align:center"><const>2</const></td>
+              <td style="padding:4px 16px; text-align:center"><const>30</const></td>
+            </tr>
+            <tr>
+              <td style="padding:4px 16px; text-align:center"><span style="color:#e67e22">&#9679;</span> Large</td>
+              <td style="padding:4px 16px; text-align:center"><const>3</const></td>
+              <td style="padding:4px 16px; text-align:center"><const>70</const></td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          If one of your cells occupies a nutrient spot, it automatically
+          <b>extracts <const>1</const>&nbsp;energy per turn</b> until the spot is depleted.
+        </p>
+      </div>
 
-      <h3>Actions (up to 5 per turn)</h3>
-      <table style="width:auto">
-        <tr><th>Action</th><th>Syntax</th><th>Cost</th><th>Effect</th></tr>
-        <tr>
-          <td><b>EXPAND</b></td><td><action>EXPAND x y</action></td><td>2</td>
-          <td>Create a new cell at <var>(x,y)</var>. Must be empty and adjacent
-              (orthogonal or diagonal) to one of your cells.</td>
-        </tr>
-        <tr>
-          <td><b>ATTACK</b></td><td><action>ATTACK x y</action></td><td>2</td>
-          <td>Attack an enemy cell at <var>(x,y)</var>. Succeeds if you have
-              <b>strictly more</b> allied neighbors around the target than the
-              defender. On success: enemy cell dies, you place your cell there,
-              and gain <b>+3 energy</b>. On failure: energy is still spent.</td>
-        </tr>
-        <tr>
-          <td><b>AUTOPHAGY</b></td><td><action>AUTOPHAGY x y</action></td><td>0</td>
-          <td>Sacrifice one of your own cells at <var>(x,y)</var>.
-              Recovers <b>+1 energy</b>.</td>
-        </tr>
-        <tr>
-          <td><b>WAIT</b></td><td><action>WAIT</action></td><td>0</td>
-          <td>Do nothing.</td>
-        </tr>
-      </table>
-      <p>
-        Separate multiple actions with <const>;</const>. Example:
-        <code>EXPAND 1 0; EXPAND 0 1; WAIT</code>
-      </p>
+      <!-- Energy -->
+      <div style="margin-bottom:15px">
+        <h2 style="font-size:16px; color:#bac4cf; border-bottom:1px solid #30363d; padding-bottom:5px">
+          <span style="color:#f1c40f">&#9654;</span> Energy
+        </h2>
+        <p>
+          Starting energy is calculated from the distance between your base and the
+          nearest nutrient spot, plus a safety margin.
+          Energy is spent to perform actions.
+        </p>
+      </div>
 
-      <h3>Fog of War</h3>
-      <p>
-        You always see <b>all nutrient spots on your own half</b> of the map.
-        Enemy cells and enemy-half spots are only visible if they are within
-        <b>Chebyshev distance 3</b> of any of your cells.
-      </p>
+      <!-- Actions -->
+      <div style="margin-bottom:15px">
+        <h2 style="font-size:16px; color:#bac4cf; border-bottom:1px solid #30363d; padding-bottom:5px">
+          <span style="color:#ff1d5c">&#9654;</span> Actions
+          <span style="font-size:12px; color:#8b949e; font-weight:normal">(up to <const>5</const> per turn)</span>
+        </h2>
 
-      <h3>Victory</h3>
-      <ul>
-        <li><b>Knockout</b>: Destroy all of the opponent's cells.</li>
-        <li><b>Turn limit</b> (500 turns): The player with the highest
-            score wins. Score = <const>cells &times; 100 + energy</const>.
-            Tiebreaker: total enemy cells destroyed.</li>
-      </ul>
+        <table class="table-bordered" style="width:100%; margin:8px 0">
+          <thead><tr>
+            <th style="padding:6px 10px; width:120px">Action</th>
+            <th style="padding:6px 10px; width:180px">Syntax</th>
+            <th style="padding:6px 10px; width:50px; text-align:center">Cost</th>
+            <th style="padding:6px 10px">Effect</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td style="padding:6px 10px"><b style="color:#22a1e4">EXPAND</b></td>
+              <td style="padding:6px 10px"><action>EXPAND x y</action></td>
+              <td style="padding:6px 10px; text-align:center"><const>2</const></td>
+              <td style="padding:6px 10px">
+                Place a new cell at <var>(x,&thinsp;y)</var>.
+                The target must be <b>empty</b> and <b>adjacent</b> (orthogonal or diagonal)
+                to one of your existing cells.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px"><b style="color:#ff1d5c">ATTACK</b></td>
+              <td style="padding:6px 10px"><action>ATTACK x y</action></td>
+              <td style="padding:6px 10px; text-align:center"><const>2</const></td>
+              <td style="padding:6px 10px">
+                Attack an enemy cell at <var>(x,&thinsp;y)</var>.
+                <b>Succeeds</b> if you have <b>strictly more</b> allied neighbors around the
+                target than the defender has.
+                On success: the enemy cell is destroyed, your cell takes its place,
+                and you gain <const>+3</const> energy.
+                On failure: energy is still spent.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px"><b style="color:#e67e22">AUTOPHAGY</b></td>
+              <td style="padding:6px 10px"><action>AUTOPHAGY x y</action></td>
+              <td style="padding:6px 10px; text-align:center"><const>0</const></td>
+              <td style="padding:6px 10px">
+                Sacrifice one of your own cells at <var>(x,&thinsp;y)</var>.
+                Recovers <const>+1</const> energy.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:6px 10px"><b style="color:#8b949e">WAIT</b></td>
+              <td style="padding:6px 10px"><action>WAIT</action></td>
+              <td style="padding:6px 10px; text-align:center"><const>0</const></td>
+              <td style="padding:6px 10px">Do nothing.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          Combine multiple actions with <const>;</const> &mdash; Example:
+          <code style="background:#161b22; padding:2px 6px; border-radius:3px">EXPAND 1 0; EXPAND 0 1; WAIT</code>
+        </p>
+      </div>
+
+      <!-- Fog of War -->
+      <div style="margin-bottom:15px">
+        <h2 style="font-size:16px; color:#bac4cf; border-bottom:1px solid #30363d; padding-bottom:5px">
+          <span style="color:#9b59b6">&#9654;</span> Fog of War
+        </h2>
+        <ul>
+          <li>You <b>always</b> see all nutrient spots on <b>your half</b> of the map.</li>
+          <li>Enemy cells and enemy-half spots are visible only within
+              <b>Chebyshev distance <const>3</const></b> of any of your cells.</li>
+        </ul>
+      </div>
+
+      <!-- Victory -->
+      <div style="margin-bottom:15px">
+        <h2 style="font-size:16px; color:#bac4cf; border-bottom:1px solid #30363d; padding-bottom:5px">
+          <span style="color:#f39c12">&#9654;</span> Victory Conditions
+        </h2>
+        <ol>
+          <li><b>Knockout</b> &mdash; Destroy <b>all</b> of your opponent's cells.</li>
+          <li><b>Turn limit</b> (<const>500</const> turns) &mdash;
+              Highest score wins.<br>
+              <span style="color:#c9d1d9">Score</span> =
+              <code style="background:#161b22; padding:2px 6px; border-radius:3px">cells &times; 100 + energy</code><br>
+              Tiebreaker: total enemy cells destroyed during the game.</li>
+        </ol>
+      </div>
+
     </div>
   </div>
 
   <!-- ======================== EXPERT ======================== -->
   <div class="statement-section statement-expert">
-    <h1><span class="icon icon-expert">&nbsp;</span><span>Expert Rules</span></h1>
+    <h1><span class="icon icon-expert">&nbsp;</span><span>Advanced Details</span></h1>
     <div class="statement-expert-content">
-      <ul>
-        <li>Both players' actions are collected simultaneously, then resolved in
-            player index order (Player&nbsp;0 first). Within one player's
-            actions, they are resolved left-to-right.</li>
-        <li>If both players try to EXPAND into the same empty cell in the same
-            turn, the first player to be resolved wins.</li>
-        <li>A failed EXPAND (occupied or non-adjacent) still costs energy.</li>
-        <li>A failed ATTACK (no majority) still costs energy.</li>
-        <li>A failed AUTOPHAGY (not your cell) does <b>not</b> cost/gain energy.</li>
-        <li>Passive nutrient extraction happens <b>after</b> all actions, once
-            per turn.</li>
-        <li>The map is symmetrical by 180&deg; rotation. Nutrient spots are
-            guaranteed reachable from both starting positions.</li>
+      <ul style="line-height:1.8">
+        <li>Both players' actions are collected <b>simultaneously</b>, then resolved
+            in player-index order (<b>Player&nbsp;0 first</b>).
+            Within one player, actions resolve left-to-right.</li>
+        <li>If both players EXPAND into the <b>same empty cell</b>, the
+            first-resolved player claims it.</li>
+        <li>A failed EXPAND (occupied or not adjacent) <b>still costs</b> energy.</li>
+        <li>A failed ATTACK (no numerical majority) <b>still costs</b> energy.</li>
+        <li>A failed AUTOPHAGY (not your cell) costs nothing and gains nothing.</li>
+        <li>Passive nutrient extraction happens <b>after</b> all actions, once per turn.</li>
+        <li>The map has <b>180&deg; rotational symmetry</b>.
+            Nutrient spots are guaranteed reachable from both starting positions.</li>
       </ul>
     </div>
   </div>
@@ -116,66 +200,82 @@
 
     <div class="blk">
       <div class="title">Initialization input</div>
-      <div class="statement-protocol-content">
-        <b>Line 1:</b> two integers <var>mapSize</var> <var>myIndex</var> &mdash;
-        grid size (always 64) and your player index (0 or 1).<br>
-        <b>Line 2:</b> <var>spotCount</var> &mdash; number of nutrient spots on
-        your half of the map.<br>
-        <b>Next <var>spotCount</var> lines:</b>
-        <var>x</var> <var>y</var> <var>type</var> &mdash; position and type code
-        (1=Small, 2=Medium, 3=Large).
+      <div class="text">
+        <p><b>Line 1:</b> two space-separated integers:</p>
+        <ul>
+          <li><var>mapSize</var> &mdash; grid side length (always <const>64</const>)</li>
+          <li><var>myIndex</var> &mdash; your player index (<const>0</const> or <const>1</const>)</li>
+        </ul>
+        <p><b>Line 2:</b> one integer <var>spotCount</var> &mdash;
+           number of nutrient spots visible on your half.</p>
+        <p><b>Next <var>spotCount</var> lines:</b> three integers each:</p>
+        <ul>
+          <li><var>x</var> <var>y</var> <var>type</var>
+              &mdash; position and type code
+              (<const>1</const>=Small, <const>2</const>=Medium, <const>3</const>=Large)</li>
+        </ul>
       </div>
     </div>
 
     <div class="blk">
       <div class="title">Input per turn</div>
-      <div class="statement-protocol-content">
-        <b>Line 1:</b> <var>myEnergy</var> <var>oppEnergy</var><br>
-        <b>Line 2:</b> <var>entityCount</var><br>
-        <b>Next <var>entityCount</var> lines</b>, one of:<br>
+      <div class="text">
+        <p><b>Line 1:</b> two integers
+          <var>myEnergy</var> <var>oppEnergy</var></p>
+        <p><b>Line 2:</b> one integer <var>entityCount</var></p>
+        <p><b>Next <var>entityCount</var> lines</b>, each one of:</p>
         <ul>
           <li><const>MYCELL</const> <var>x</var> <var>y</var></li>
           <li><const>OPPCELL</const> <var>x</var> <var>y</var></li>
-          <li><const>SPOT</const> <var>x</var> <var>y</var> <var>type</var>
-              <var>remainingEnergy</var></li>
+          <li><const>SPOT</const> <var>x</var> <var>y</var> <var>type</var> <var>remainingEnergy</var></li>
         </ul>
       </div>
     </div>
 
     <div class="blk">
       <div class="title">Output</div>
-      <div class="statement-protocol-content">
-        A single line with up to 5 actions separated by <const>;</const>.<br>
-        Example: <code>EXPAND 1 0; ATTACK 3 4; WAIT</code>
+      <div class="text">
+        <p>A <b>single line</b> with up to <const>5</const> actions separated by <const>;</const></p>
+        <p style="margin-top:6px">Example:
+          <code style="background:#161b22; padding:2px 6px; border-radius:3px">EXPAND 1 0; ATTACK 3 4; WAIT</code>
+        </p>
       </div>
     </div>
 
     <div class="blk">
       <div class="title">Constraints</div>
-      <div class="statement-protocol-content">
-        Grid size = <const>64</const><br>
-        Max turns = <const>500</const><br>
-        Response time per turn &le; <const>50 ms</const><br>
-        First turn response time &le; <const>1000 ms</const>
+      <div class="text">
+        <table style="width:auto; margin:4px 0">
+          <tr><td style="padding:2px 20px 2px 0">Grid size</td><td><const>64 &times; 64</const></td></tr>
+          <tr><td style="padding:2px 20px 2px 0">Max turns</td><td><const>500</const></td></tr>
+          <tr><td style="padding:2px 20px 2px 0">Max actions per turn</td><td><const>5</const></td></tr>
+          <tr><td style="padding:2px 20px 2px 0">Response time per turn</td><td>&le; <const>50 ms</const></td></tr>
+          <tr><td style="padding:2px 20px 2px 0">First turn response time</td><td>&le; <const>1000 ms</const></td></tr>
+        </table>
       </div>
     </div>
   </div>
 
   <!-- ======================== EXAMPLE ======================== -->
   <div class="statement-section statement-examples">
-    <h1><span class="icon icon-example">&nbsp;</span><span>Example</span></h1>
+    <h1><span class="icon icon-example">&nbsp;</span><span>Example Turn</span></h1>
     <div class="statement-examples-content">
-      <p><b>Turn 1 input (Player 0):</b></p>
-<pre>15 20
+      <div style="margin-bottom:12px">
+        <b>Turn 1 input (Player 0):</b>
+      </div>
+<pre style="background:#161b22; padding:10px; border-radius:4px; line-height:1.6">15 20
 2
 MYCELL 0 0
 SPOT 5 3 1 10</pre>
-      <p><b>Your output:</b></p>
-<pre>EXPAND 1 0; EXPAND 1 1</pre>
-      <p>
-        You spend 4 energy to place two new cells. Your energy drops to 11.
-        Next turn you'll see 3 own cells and can keep expanding toward that
-        Small nutrient at (5,3).
+
+      <div style="margin:12px 0 6px"><b>Your output:</b></div>
+<pre style="background:#161b22; padding:10px; border-radius:4px; line-height:1.6">EXPAND 1 0; EXPAND 1 1</pre>
+
+      <p style="margin-top:12px; color:#c9d1d9">
+        You spend <const>4</const> energy to place two new cells adjacent to your base.
+        Your energy drops from <const>15</const> to <const>11</const>.
+        Next turn you will see 3 own cells and can keep expanding toward
+        the Small nutrient at <const>(5,&thinsp;3)</const>.
       </p>
     </div>
   </div>
