@@ -6,6 +6,9 @@ release.properties
 # Logs de build local
 scripts/last-build.log
 
+# Node (se vier a ter build frontend local)
+node_modules/
+
 # IDEs
 .idea/
 *.iml
