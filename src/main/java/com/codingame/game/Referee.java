@@ -1,6 +1,5 @@
 package com.codingame.game;
 
-import com.codingame.gameengine.core.AbstractMultiplayerPlayer;
 import com.codingame.gameengine.core.AbstractReferee;
 import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.module.entities.GraphicEntityModule;
@@ -8,18 +7,7 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
-// 1. A Classe do Jogador (Guarda o estado de cada Bot)
-class Player extends AbstractMultiplayerPlayer {
-    int energy;
-    int expectedOutputLines = 1; // O jogador deve devolver 1 linha por turno
-
-    @Override
-    public int getExpectedOutputLines() {
-        return expectedOutputLines;
-    }
-}
-
-// 2. O Motor do Jogo (O Referee)
+// O Motor do Jogo (O Referee)
 public class Referee extends AbstractReferee {
     // Injeção de dependências oficiais do CodinGame SDK
     @Inject private MultiplayerGameManager<Player> gameManager;
