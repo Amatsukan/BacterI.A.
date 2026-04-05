@@ -1,0 +1,82 @@
+<!-- Enunciado do BacterI.A. — versão EN -->
+<div id="statement_back" class="statement_back" style="display:none"></div>
+<div class="statement-body">
+
+  <!-- ==================== GOAL ==================== -->
+  <div class="statement-section statement-goal">
+    <h1><span class="icon icon-goal">&nbsp;</span><span>The Goal</span></h1>
+    <div class="statement-goal-content">
+      Conquer the Petri dish. Expand your bacterial colony, harvest nutrients and
+      eliminate your opponent's cells before the turn limit runs out.
+    </div>
+  </div>
+
+  <!-- ==================== RULES ==================== -->
+  <div class="statement-section statement-rules">
+    <h1><span class="icon icon-rules">&nbsp;</span><span>Rules</span></h1>
+    <div class="statement-rules-content">
+      <p>
+        Two players start at opposite corners of a <b>64×64</b> grid, each with
+        <b>1 cell</b> and <b>20 energy</b>.
+      </p>
+
+      <h3>Actions (up to 5 per turn, separated by <code>;</code>)</h3>
+      <ul>
+        <li><b>EXPAND x y</b> — Cost: 2 energy. Creates a new cell adjacent (orthogonal or diagonal) to one of your existing cells.</li>
+        <li><b>ATTACK x y</b> — Cost: 2 energy. Attack an adjacent enemy cell. Succeeds if you have more allied neighbors around the target than the enemy does. Reward: +3 energy.</li>
+        <li><b>AUTOPHAGY x y</b> — Cost: 0. Sacrifice one of your own cells, recovering 1 energy.</li>
+        <li><b>WAIT</b> — Do nothing.</li>
+      </ul>
+
+      <h3>Victory Conditions</h3>
+      <ul>
+        <li><b>Knockout</b>: Eliminate all enemy cells.</li>
+        <li><b>Turn limit</b>: After 200 turns, the player with the most cells wins.
+            Tiebreaker: banked energy / 10. Second tiebreaker: cells destroyed.</li>
+      </ul>
+
+      <h3>Fog of War</h3>
+      <p>
+        You only see enemies and neutral spots within a <b>3-cell radius</b> of your cells.
+        Your own half of the map is fully visible.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== PROTOCOL ==================== -->
+  <div class="statement-section statement-protocol">
+    <h1><span class="icon icon-protocol">&nbsp;</span><span>Game Input / Output</span></h1>
+
+    <div class="blk">
+      <div class="title">Initialization input (once)</div>
+      <div class="statement-protocol-content">
+        <b>Line 1:</b> <var>mapSize</var> — size of the square grid (always 64).
+      </div>
+    </div>
+
+    <div class="blk">
+      <div class="title">Input per turn</div>
+      <div class="statement-protocol-content">
+        <b>Line 1:</b> <var>myEnergy</var> <var>oppEnergy</var><br>
+        <b>Line 2:</b> <var>visibleEntitiesCount</var><br>
+        <b>Next <var>visibleEntitiesCount</var> lines:</b> entity data (to be defined).
+      </div>
+    </div>
+
+    <div class="blk">
+      <div class="title">Output per turn</div>
+      <div class="statement-protocol-content">
+        A single line with up to 5 actions separated by <code>;</code>.<br>
+        Example: <code>EXPAND 1 0; WAIT</code>
+      </div>
+    </div>
+
+    <div class="blk">
+      <div class="title">Constraints</div>
+      <div class="statement-protocol-content">
+        Response time per turn ≤ 50 ms (first turn ≤ 1000 ms).
+      </div>
+    </div>
+  </div>
+
+</div>
