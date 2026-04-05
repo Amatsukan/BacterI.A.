@@ -61,43 +61,32 @@ public class Referee extends AbstractReferee {
         // ====================================================================
         for (Player player : gameManager.getActivePlayers()) {
             try {
-                // Lê o que o jogador fez "console.log" (stdout)
                 List<String> outputs = player.getOutputs();
-                String actionLine = outputs.get(0);
-                
-                // Parse das ações (ex: "EXPAND 10 15; ATTACK 11 15")
-                String[] actions = actionLine.split(";");
-                
-                if (actions.length > 5) {
-                    throw new Exception("Limite de 5 ações excedido!");
-                }
+                List<GameLogic.Action> actions = GameLogic.parseActions(outputs.get(0));
 
-                for (String actionStr : actions) {
-                    String[] parts = actionStr.trim().split(" ");
-                    String command = parts[0];
-                    
-                    // Exemplo de Switch para processar comandos
-                    switch (command) {
-                        case "EXPAND":
-                            int x = Integer.parseInt(parts[1]);
-                            int y = Integer.parseInt(parts[2]);
-                            // TODO: Validar se tem 2 de energia, adjacência e espaço vazio
+                for (GameLogic.Action action : actions) {
+                    if (!GameLogic.canAfford(player.energy, action.type)) {
+                        throw new Exception("Energia insuficiente para " + action.type);
+                    }
+                    switch (action.type) {
+                        case EXPAND:
+                            // TODO: Validar adjacência e espaço vazio
+                            player.energy = GameLogic.applyEnergyCost(player.energy, action.type);
                             break;
-                        case "ATTACK":
+                        case ATTACK:
                             // TODO: Lógica de superioridade numérica
+                            player.energy = GameLogic.applyEnergyCost(player.energy, action.type);
                             break;
-                        case "AUTOPHAGY":
+                        case AUTOPHAGY:
                             // TODO: Lógica de sacrifício
+                            player.energy = GameLogic.applyEnergyCost(player.energy, action.type);
                             break;
-                        case "WAIT":
+                        case WAIT:
                             break;
-                        default:
-                            throw new Exception("Comando inválido: " + command);
                     }
                 }
             } catch (Exception e) {
-                // Se o código do jogador crashar, devolver formato inválido, ou timeout:
-                player.deactivate("Erro de Execução ou Timeout: " + e.getMessage());
+                player.deactivate("Erro: " + e.getMessage());
                 player.setScore(-1);
                 gameManager.endGame();
             }

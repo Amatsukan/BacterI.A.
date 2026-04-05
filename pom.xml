@@ -19,12 +19,54 @@
             <artifactId>core</artifactId>
             <version>4.2.0</version>
         </dependency>
-        
-        <!-- Graphic Entity Module (For the frontend connection) -->
+
+        <!-- Graphic Entity Module -->
         <dependency>
             <groupId>com.codingame.gameengine</groupId>
             <artifactId>module-entities</artifactId>
             <version>4.2.0</version>
         </dependency>
+
+        <!--
+            Runner: simula partidas localmente via MultiplayerGameRunner.
+            Também corrige o erro "Could not find Exporter" no CI do CodinGame,
+            pois o CI gera o pom-plugin.xml a partir deste pom.xml e inclui
+            o runner no referee.jar (shade).
+        -->
+        <dependency>
+            <groupId>com.codingame.gameengine</groupId>
+            <artifactId>runner</artifactId>
+            <version>4.2.0</version>
+        </dependency>
+
+        <!-- Testes unitários -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Executa Main.java localmente: mvn test-compile exec:java -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>Main</mainClass>
+                    <classpathScope>test</classpathScope>
+                </configuration>
+            </plugin>
+
+            <!-- Necessário para o JUnit 5 funcionar com mvn test -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.2</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
