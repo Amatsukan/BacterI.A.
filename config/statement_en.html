@@ -222,13 +222,19 @@
       <div class="text">
         <p><b>Line 1:</b> two integers
           <var>myEnergy</var> <var>oppEnergy</var></p>
-        <p><b>Line 2:</b> one integer <var>entityCount</var></p>
-        <p><b>Next <var>entityCount</var> lines</b>, each one of:</p>
-        <ul>
-          <li><const>MYCELL</const> <var>x</var> <var>y</var></li>
-          <li><const>OPPCELL</const> <var>x</var> <var>y</var></li>
-          <li><const>SPOT</const> <var>x</var> <var>y</var> <var>type</var> <var>remainingEnergy</var></li>
-        </ul>
+
+        <p><b>Line 2:</b> <var>myCellCount</var></p>
+        <p><b>Next <var>myCellCount</var> lines:</b>
+           <var>x</var> <var>y</var> &mdash; coordinates of one of your cells</p>
+
+        <p><b>Next line:</b> <var>oppCellCount</var></p>
+        <p><b>Next <var>oppCellCount</var> lines:</b>
+           <var>x</var> <var>y</var> &mdash; coordinates of a visible enemy cell</p>
+
+        <p><b>Next line:</b> <var>visibleSpotCount</var></p>
+        <p><b>Next <var>visibleSpotCount</var> lines:</b>
+           <var>x</var> <var>y</var> <var>type</var> <var>remainingEnergy</var>
+           &mdash; a visible nutrient spot</p>
       </div>
     </div>
 
@@ -264,18 +270,21 @@
         <b>Turn 1 input (Player 0):</b>
       </div>
 <pre style="background:#161b22; padding:10px; border-radius:4px; line-height:1.6">15 20
-2
-MYCELL 0 0
-SPOT 5 3 1 10</pre>
+1
+0 0
+0
+1
+5 3 1 10</pre>
 
       <div style="margin:12px 0 6px"><b>Your output:</b></div>
 <pre style="background:#161b22; padding:10px; border-radius:4px; line-height:1.6">EXPAND 1 0; EXPAND 1 1</pre>
 
       <p style="margin-top:12px; color:#c9d1d9">
-        You spend <const>4</const> energy to place two new cells adjacent to your base.
-        Your energy drops from <const>15</const> to <const>11</const>.
-        Next turn you will see 3 own cells and can keep expanding toward
-        the Small nutrient at <const>(5,&thinsp;3)</const>.
+        You have <const>15</const> energy, opponent has <const>20</const>.
+        You see <const>1</const> own cell at (0,0), <const>0</const> enemy cells,
+        and <const>1</const> nutrient spot (Small at 5,3 with 10 remaining).
+        You spend <const>4</const> energy to place two new cells.
+        Energy drops to <const>11</const>.
       </p>
     </div>
   </div>

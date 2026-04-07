@@ -1,0 +1,35 @@
+read mapSize:int myIndex:int
+read spotCount:int
+loop spotCount read spotX:int spotY:int spotType:int
+gameloop
+read myEnergy:int oppEnergy:int
+read myCellCount:int
+loop myCellCount read myX:int myY:int
+read oppCellCount:int
+loop oppCellCount read oppX:int oppY:int
+read visibleSpotCount:int
+loop visibleSpotCount read sX:int sY:int sType:int sEnergy:int
+write WAIT
+
+STATEMENT
+Expand your bacterial colony, harvest nutrients, and destroy the opponent.
+
+INPUT
+mapSize: grid side length (always 64)
+myIndex: your player index (0 or 1)
+spotCount: number of nutrient spots visible on your half at start
+spotX, spotY: position of a nutrient spot
+spotType: 1=Small(10), 2=Medium(30), 3=Large(70)
+myEnergy: your current energy
+oppEnergy: opponent current energy
+myCellCount: number of your cells
+myX, myY: position of one of your cells
+oppCellCount: number of visible enemy cells
+oppX, oppY: position of a visible enemy cell
+visibleSpotCount: number of visible nutrient spots this turn
+sX, sY: position of a visible spot
+sType: spot type code
+sEnergy: remaining energy in the spot
+
+OUTPUT
+Up to 5 actions separated by ; (EXPAND x y, ATTACK x y, AUTOPHAGY x y, WAIT)

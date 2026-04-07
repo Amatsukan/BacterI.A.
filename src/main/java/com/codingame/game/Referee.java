@@ -69,17 +69,19 @@ public class Referee extends AbstractReferee {
 
             player.sendInputLine(board.energy[idx] + " " + board.energy[oppIdx]);
 
-            int entityCount = vs.myCells.size() + vs.oppCells.size() + vs.visibleSpots.size();
-            player.sendInputLine(String.valueOf(entityCount));
-
+            player.sendInputLine(String.valueOf(vs.myCells.size()));
             for (Board.Point c : vs.myCells) {
-                player.sendInputLine("MYCELL " + c.x + " " + c.y);
+                player.sendInputLine(c.x + " " + c.y);
             }
+
+            player.sendInputLine(String.valueOf(vs.oppCells.size()));
             for (Board.Point c : vs.oppCells) {
-                player.sendInputLine("OPPCELL " + c.x + " " + c.y);
+                player.sendInputLine(c.x + " " + c.y);
             }
+
+            player.sendInputLine(String.valueOf(vs.visibleSpots.size()));
             for (Board.NutrientSpot s : vs.visibleSpots) {
-                player.sendInputLine("SPOT " + s.x + " " + s.y + " " + s.type.code + " " + s.remainingEnergy);
+                player.sendInputLine(s.x + " " + s.y + " " + s.type.code + " " + s.remainingEnergy);
             }
 
             player.execute();

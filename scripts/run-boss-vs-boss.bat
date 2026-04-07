@@ -15,12 +15,12 @@ if errorlevel 1 (
 
 echo.
 echo ========================================================
-echo  bacter-ia :: Simulacao local (WaitBot vs WaitBot)
+echo  bacter-ia :: Boss vs Boss
 echo  Replay: http://localhost:8888
 echo ========================================================
 echo.
 
-mvn test-compile exec:exec
+mvn test-compile exec:exec "-Dexec.mainClass=BossVsBoss"
 if errorlevel 1 (
     echo.
     echo [ERRO] Falhou. Veja os erros acima.

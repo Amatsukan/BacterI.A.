@@ -40,7 +40,7 @@ if /i "%SIMULAR%"=="S" (
     echo.
     echo A iniciar simulacao...
     echo.
-    mvn test-compile exec:java
+    mvn test-compile exec:exec
 )
 echo.
 pause

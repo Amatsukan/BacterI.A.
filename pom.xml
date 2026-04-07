@@ -10,6 +10,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+        <exec.mainClass>Main</exec.mainClass>
     </properties>
 
     <dependencies>
@@ -50,14 +51,24 @@
 
     <build>
         <plugins>
-            <!-- Executa Main.java localmente: mvn test-compile exec:java -->
+            <!--
+                Simula localmente: mvn test-compile exec:exec
+                Para trocar o bot principal: mvn test-compile exec:exec -Dexec.mainClass=BossVsBoss
+                Usa exec:exec (JVM forked) para que o system classloader inclua as deps
+                do projeto, sem o qual Renderer.getSystemClassLoader() nao acha test.html.
+            -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>Main</mainClass>
+                    <executable>java</executable>
                     <classpathScope>test</classpathScope>
+                    <arguments>
+                        <argument>-classpath</argument>
+                        <classpath/>
+                        <argument>${exec.mainClass}</argument>
+                    </arguments>
                 </configuration>
             </plugin>
 

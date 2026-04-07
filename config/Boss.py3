@@ -9,7 +9,7 @@ MAP_SIZE = int(line[0])
 MY_ID = int(line[1])
 
 spot_count = int(input())
-known_spots = {}  # (x,y) -> (type_code, remaining)
+known_spots = {}
 for _ in range(spot_count):
     parts = input().split()
     sx, sy, stype = int(parts[0]), int(parts[1]), int(parts[2])
@@ -28,7 +28,6 @@ def neighbors(x, y):
                 yield nx, ny
 
 def bfs_next_step(my_cells_set, target_x, target_y):
-    """BFS from target back to any of my cells; return the cell adjacent to my frontier."""
     visited = set()
     queue = deque()
     queue.append((target_x, target_y, None))
@@ -45,8 +44,8 @@ def bfs_next_step(my_cells_set, target_x, target_y):
             queue.append((nx, ny, step))
     return None
 
-def count_my_neighbors(x, y, my_cells_set):
-    return sum(1 for nx, ny in neighbors(x, y) if (nx, ny) in my_cells_set)
+def count_my_neighbors(x, y, cell_set):
+    return sum(1 for nx, ny in neighbors(x, y) if (nx, ny) in cell_set)
 
 # -----------------------------------------------------------------------
 # Game loop
@@ -57,24 +56,28 @@ while True:
     my_energy = int(parts[0])
     opp_energy = int(parts[1])
 
-    entity_count = int(input())
+    # --- Read my cells ---
+    my_cell_count = int(input())
     my_cells = set()
-    opp_cells = set()
-    visible_spots = {}
+    for _ in range(my_cell_count):
+        t = input().split()
+        my_cells.add((int(t[0]), int(t[1])))
 
-    for _ in range(entity_count):
-        tokens = input().split()
-        etype = tokens[0]
-        ex, ey = int(tokens[1]), int(tokens[2])
-        if etype == "MYCELL":
-            my_cells.add((ex, ey))
-        elif etype == "OPPCELL":
-            opp_cells.add((ex, ey))
-        elif etype == "SPOT":
-            stype = int(tokens[3])
-            remaining = int(tokens[4])
-            visible_spots[(ex, ey)] = (stype, remaining)
-            known_spots[(ex, ey)] = (stype, remaining)
+    # --- Read opponent cells ---
+    opp_cell_count = int(input())
+    opp_cells = set()
+    for _ in range(opp_cell_count):
+        t = input().split()
+        opp_cells.add((int(t[0]), int(t[1])))
+
+    # --- Read visible spots ---
+    vis_spot_count = int(input())
+    visible_spots = {}
+    for _ in range(vis_spot_count):
+        t = input().split()
+        sx, sy, stype, rem = int(t[0]), int(t[1]), int(t[2]), int(t[3])
+        visible_spots[(sx, sy)] = (stype, rem)
+        known_spots[(sx, sy)] = (stype, rem)
 
     actions = []
 
@@ -96,7 +99,6 @@ while True:
     # --- Phase: Expand toward nearest non-depleted nutrient ---
     undepleted = {pos: info for pos, info in known_spots.items() if info[1] > 0}
     if undepleted and my_energy >= 2:
-        # Sort by distance to closest own cell
         def spot_priority(pos):
             return min(max(abs(pos[0] - cx), abs(pos[1] - cy)) for cx, cy in my_cells)
 

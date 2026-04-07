@@ -6,43 +6,59 @@ import com.codingame.gameengine.module.entities.GraphicEntityModule;
 import com.codingame.gameengine.module.entities.Rectangle;
 import com.codingame.gameengine.module.entities.Text;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Sparse, delta-based renderer.  Only creates/moves Rectangle entities for
+ * cells that are actually occupied, and only touches the SDK on frames where
+ * something changed.  Entity objects are pooled and recycled so the total
+ * entity count in the SDK stays close to the number of *active* cells.
+ */
 public class View {
 
     private static final int WORLD_W = 1920;
     private static final int WORLD_H = 1080;
 
-    private static final int GRID_ORIGIN_X = 20;
-    private static final int GRID_ORIGIN_Y = 28;
+    private static final int GRID_X = 20;
+    private static final int GRID_Y = 28;
     private static final int GRID_PX = 1024;
 
-    private static final int BG_COLOR        = 0x0a0e14;
-    private static final int GRID_BG_COLOR   = 0x111820;
-    private static final int GRID_BORDER     = 0x30363d;
-    private static final int P0_COLOR        = 0x22a1e4;
-    private static final int P1_COLOR        = 0xff1d5c;
-    private static final int SPOT_S_COLOR    = 0x2ecc71;
-    private static final int SPOT_M_COLOR    = 0xf1c40f;
-    private static final int SPOT_L_COLOR    = 0xe67e22;
-    private static final int DEPLETED_COLOR  = 0x262d38;
-    private static final int TEXT_WHITE      = 0xf0f6fc;
-    private static final int TEXT_DIM        = 0x8b949e;
-    private static final int HUD_PANEL       = 0x161b22;
+    private static final int BG        = 0x0a0e14;
+    private static final int GRID_BG   = 0x111820;
+    private static final int BORDER    = 0x30363d;
+    private static final int P0        = 0x22a1e4;
+    private static final int P1        = 0xff1d5c;
+    private static final int SPOT_S    = 0x2ecc71;
+    private static final int SPOT_M    = 0xf1c40f;
+    private static final int SPOT_L    = 0xe67e22;
+    private static final int DEPLETED  = 0x262d38;
+    private static final int TXT       = 0xf0f6fc;
+    private static final int DIM       = 0x8b949e;
+    private static final int PANEL     = 0x161b22;
 
     private final GraphicEntityModule gem;
     private final Board board;
     private final MultiplayerGameManager<Player> gm;
 
     private int cellPx;
-    private final Map<Long, Rectangle> cellEntities = new HashMap<>();
+
+    // Cell rendering: key = y * boardSize + x
+    private final Map<Integer, Rectangle> liveEntities = new HashMap<>();
+    private final Deque<Rectangle> pool = new ArrayDeque<>();
+
+    // Previous frame state for delta detection
+    private int[][] prevCells;
+    private boolean[] prevSpotDepleted;
+
     private Circle[] spotCircles;
     private Text turnText;
     private Text[] scoreTexts = new Text[2];
     private Text[] energyTexts = new Text[2];
-    private Text[] cellCountTexts = new Text[2];
-    private Rectangle[] energyBars = new Rectangle[2];
+    private Text[] cellTexts = new Text[2];
+    private Rectangle[] bars = new Rectangle[2];
 
     public View(GraphicEntityModule gem, Board board, MultiplayerGameManager<Player> gm) {
         this.gem = gem;
@@ -51,208 +67,180 @@ public class View {
     }
 
     public void init() {
+        int size = board.size;
+        cellPx = GRID_PX / size;
+        int gridTotal = cellPx * size;
+
         gem.createWorld(WORLD_W, WORLD_H);
-        cellPx = GRID_PX / board.size;
-        int gridTotal = cellPx * board.size;
 
-        // Background
+        gem.createRectangle().setWidth(WORLD_W).setHeight(WORLD_H).setFillColor(BG);
         gem.createRectangle()
-            .setWidth(WORLD_W).setHeight(WORLD_H)
-            .setFillColor(BG_COLOR);
-
-        // Grid border
-        gem.createRectangle()
-            .setX(GRID_ORIGIN_X - 3).setY(GRID_ORIGIN_Y - 3)
+            .setX(GRID_X - 3).setY(GRID_Y - 3)
             .setWidth(gridTotal + 6).setHeight(gridTotal + 6)
-            .setFillColor(GRID_BORDER);
-
-        // Grid background
+            .setFillColor(BORDER);
         gem.createRectangle()
-            .setX(GRID_ORIGIN_X).setY(GRID_ORIGIN_Y)
+            .setX(GRID_X).setY(GRID_Y)
             .setWidth(gridTotal).setHeight(gridTotal)
-            .setFillColor(GRID_BG_COLOR);
+            .setFillColor(GRID_BG);
 
-        // Nutrient spot circles (drawn on the grid background)
+        // Nutrient spots
         spotCircles = new Circle[board.spots.size()];
+        prevSpotDepleted = new boolean[board.spots.size()];
         int r = Math.max(cellPx / 3, 3);
         for (int i = 0; i < board.spots.size(); i++) {
             Board.NutrientSpot s = board.spots.get(i);
             spotCircles[i] = gem.createCircle()
-                .setX(GRID_ORIGIN_X + s.x * cellPx + cellPx / 2)
-                .setY(GRID_ORIGIN_Y + s.y * cellPx + cellPx / 2)
+                .setX(GRID_X + s.x * cellPx + cellPx / 2)
+                .setY(GRID_Y + s.y * cellPx + cellPx / 2)
                 .setRadius(r)
-                .setFillColor(spotColor(s))
-                .setAlpha(0.85);
+                .setFillColor(spotColor(s)).setAlpha(0.85);
         }
 
-        // Initial player cells
-        for (Board.Point p : board.playerCells[0]) {
-            showCell(p.x, p.y, P0_COLOR);
-        }
-        for (Board.Point p : board.playerCells[1]) {
-            showCell(p.x, p.y, P1_COLOR);
-        }
-
-        initHUD();
-
-        gem.commitWorldState(0);
-    }
-
-    private void initHUD() {
-        int hudX = GRID_ORIGIN_X + cellPx * board.size + 30;
-        int hudW = WORLD_W - hudX - 20;
-
-        gem.createText("BacterI.A.")
-            .setX(hudX).setY(24)
-            .setFillColor(TEXT_WHITE)
-            .setFontSize(36)
-            .setFontWeight(Text.FontWeight.BOLD);
-
-        turnText = gem.createText("Turn 0 / " + GameLogic.MAX_TURNS)
-            .setX(hudX).setY(72)
-            .setFillColor(TEXT_DIM)
-            .setFontSize(22);
-
-        drawPlayerPanel(hudX, 130, hudW, 0);
-        drawPlayerPanel(hudX, 380, hudW, 1);
-
-        // Legend
-        int ly = 640;
-        gem.createText("NUTRIENTS")
-            .setX(hudX).setY(ly)
-            .setFillColor(TEXT_DIM)
-            .setFontSize(18)
-            .setFontWeight(Text.FontWeight.BOLD);
-
-        ly += 36;
-        drawLegendItem(hudX, ly, SPOT_S_COLOR, "Small (10)");
-        ly += 32;
-        drawLegendItem(hudX, ly, SPOT_M_COLOR, "Medium (30)");
-        ly += 32;
-        drawLegendItem(hudX, ly, SPOT_L_COLOR, "Large (70)");
-        ly += 32;
-        drawLegendItem(hudX, ly, DEPLETED_COLOR, "Depleted");
-    }
-
-    private void drawPlayerPanel(int x, int y, int w, int pIdx) {
-        int pColor = pIdx == 0 ? P0_COLOR : P1_COLOR;
-
-        gem.createRectangle()
-            .setX(x - 8).setY(y)
-            .setWidth(w + 8).setHeight(200)
-            .setFillColor(HUD_PANEL)
-            .setLineWidth(1).setLineColor(GRID_BORDER);
-
-        gem.createRectangle()
-            .setX(x - 8).setY(y)
-            .setWidth(4).setHeight(200)
-            .setFillColor(pColor);
-
-        gem.createText(gm.getPlayer(pIdx).getNicknameToken())
-            .setX(x + 8).setY(y + 12)
-            .setFillColor(TEXT_WHITE)
-            .setFontSize(26)
-            .setFontWeight(Text.FontWeight.BOLD);
-
-        gem.createText("PLAYER " + pIdx)
-            .setX(x + 8).setY(y + 48)
-            .setFillColor(pColor)
-            .setFontSize(14)
-            .setFontWeight(Text.FontWeight.BOLD);
-
-        scoreTexts[pIdx] = gem.createText("Score: " + GameLogic.computeScore(board, pIdx))
-            .setX(x + 8).setY(y + 78)
-            .setFillColor(TEXT_WHITE)
-            .setFontSize(22);
-
-        energyTexts[pIdx] = gem.createText("Energy: " + board.energy[pIdx])
-            .setX(x + 8).setY(y + 112)
-            .setFillColor(TEXT_DIM)
-            .setFontSize(18);
-
-        int barMaxW = Math.max(w - 20, 1);
-        energyBars[pIdx] = gem.createRectangle()
-            .setX(x + 8).setY(y + 140)
-            .setWidth(Math.max(Math.min(board.energy[pIdx] * 3, barMaxW), 1))
-            .setHeight(8)
-            .setFillColor(pColor)
-            .setAlpha(0.7);
-
-        cellCountTexts[pIdx] = gem.createText("Cells: " + board.playerCells[pIdx].size())
-            .setX(x + 8).setY(y + 160)
-            .setFillColor(TEXT_DIM)
-            .setFontSize(18);
-    }
-
-    private void drawLegendItem(int x, int y, int color, String label) {
-        gem.createCircle()
-            .setX(x + 8).setY(y + 10)
-            .setRadius(7)
-            .setFillColor(color)
-            .setAlpha(color == DEPLETED_COLOR ? 0.5 : 0.85);
-        gem.createText(label)
-            .setX(x + 26).setY(y)
-            .setFillColor(TEXT_DIM)
-            .setFontSize(16);
-    }
-
-    public void update(Board board, int turn) {
-        // Hide all tracked cell entities
-        for (Rectangle r : cellEntities.values()) {
-            r.setAlpha(0.0);
-        }
-
-        // Show cells for both players
-        for (Board.Point p : board.playerCells[0]) {
-            showCell(p.x, p.y, P0_COLOR);
-        }
-        for (Board.Point p : board.playerCells[1]) {
-            showCell(p.x, p.y, P1_COLOR);
-        }
-
-        // Update nutrient spot overlays
-        for (int i = 0; i < board.spots.size(); i++) {
-            Board.NutrientSpot s = board.spots.get(i);
-            if (s.isDepleted()) {
-                spotCircles[i].setFillColor(DEPLETED_COLOR).setAlpha(0.3);
-            } else {
-                spotCircles[i].setFillColor(spotColor(s)).setAlpha(0.85);
+        // Snapshot initial board state and render occupied cells
+        prevCells = new int[size][size];
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                int owner = board.cells[y][x];
+                prevCells[y][x] = owner;
+                if (owner != Board.EMPTY) {
+                    acquire(x, y, owner == Board.PLAYER0 ? P0 : P1);
+                }
             }
         }
 
-        // Update HUD
+        buildHUD();
+        gem.commitWorldState(0);
+    }
+
+    /* ---- delta update --------------------------------------------------- */
+
+    public void update(Board board, int turn) {
+        int size = board.size;
+
+        // 1. Only touch cells that actually changed since last frame
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                int cur = board.cells[y][x];
+                if (cur != prevCells[y][x]) {
+                    if (cur == Board.EMPTY) {
+                        recycle(key(x, y));
+                    } else {
+                        acquire(x, y, cur == Board.PLAYER0 ? P0 : P1);
+                    }
+                    prevCells[y][x] = cur;
+                }
+            }
+        }
+
+        // 2. Only update spots whose depletion state flipped
+        for (int i = 0; i < board.spots.size(); i++) {
+            boolean dep = board.spots.get(i).isDepleted();
+            if (dep != prevSpotDepleted[i]) {
+                spotCircles[i].setFillColor(DEPLETED).setAlpha(0.3);
+                prevSpotDepleted[i] = dep;
+            }
+        }
+
+        // 3. HUD (cheap text updates)
         turnText.setText("Turn " + turn + " / " + GameLogic.MAX_TURNS);
-        int barMaxW = WORLD_W - (GRID_ORIGIN_X + cellPx * board.size + 30) - 30;
+        int maxBar = WORLD_W - (GRID_X + cellPx * size + 60);
         for (int p = 0; p < 2; p++) {
             scoreTexts[p].setText("Score: " + GameLogic.computeScore(board, p));
             energyTexts[p].setText("Energy: " + board.energy[p]);
-            cellCountTexts[p].setText("Cells: " + board.playerCells[p].size());
-            energyBars[p].setWidth(Math.max(Math.min(board.energy[p] * 3, barMaxW), 1));
+            cellTexts[p].setText("Cells: " + board.playerCells[p].size());
+            bars[p].setWidth(Math.max(1, Math.min(board.energy[p] * 3, maxBar)));
         }
-
-        gem.commitWorldState(1.0);
     }
 
-    private void showCell(int x, int y, int color) {
-        long key = (long) y * board.size + x;
-        Rectangle r = cellEntities.get(key);
+    /* ---- entity pool ---------------------------------------------------- */
+
+    private void acquire(int x, int y, int color) {
+        int k = key(x, y);
+        Rectangle r = liveEntities.get(k);
+        if (r != null) {
+            r.setFillColor(color).setAlpha(1.0);
+            return;
+        }
+        r = pool.pollFirst();
         if (r == null) {
             r = gem.createRectangle()
-                .setX(GRID_ORIGIN_X + x * cellPx)
-                .setY(GRID_ORIGIN_Y + y * cellPx)
-                .setWidth(cellPx - 1)
-                .setHeight(cellPx - 1);
-            cellEntities.put(key, r);
+                .setWidth(cellPx - 1).setHeight(cellPx - 1);
         }
-        r.setFillColor(color).setAlpha(1.0);
+        r.setX(GRID_X + x * cellPx)
+         .setY(GRID_Y + y * cellPx)
+         .setFillColor(color).setAlpha(1.0);
+        liveEntities.put(k, r);
+    }
+
+    private void recycle(int k) {
+        Rectangle r = liveEntities.remove(k);
+        if (r != null) {
+            r.setAlpha(0.0);
+            pool.addLast(r);
+        }
+    }
+
+    private int key(int x, int y) {
+        return y * board.size + x;
+    }
+
+    /* ---- HUD ------------------------------------------------------------ */
+
+    private void buildHUD() {
+        int hx = GRID_X + cellPx * board.size + 30;
+        int hw = WORLD_W - hx - 20;
+
+        gem.createText("BacterI.A.").setX(hx).setY(24)
+            .setFillColor(TXT).setFontSize(36).setFontWeight(Text.FontWeight.BOLD);
+        turnText = gem.createText("Turn 0 / " + GameLogic.MAX_TURNS)
+            .setX(hx).setY(72).setFillColor(DIM).setFontSize(22);
+
+        playerPanel(hx, 130, hw, 0);
+        playerPanel(hx, 380, hw, 1);
+
+        int ly = 640;
+        gem.createText("NUTRIENTS").setX(hx).setY(ly)
+            .setFillColor(DIM).setFontSize(18).setFontWeight(Text.FontWeight.BOLD);
+        ly += 36; legend(hx, ly, SPOT_S, "Small (10)");
+        ly += 32; legend(hx, ly, SPOT_M, "Medium (30)");
+        ly += 32; legend(hx, ly, SPOT_L, "Large (70)");
+        ly += 32; legend(hx, ly, DEPLETED, "Depleted");
+    }
+
+    private void playerPanel(int x, int y, int w, int p) {
+        int c = p == 0 ? P0 : P1;
+        gem.createRectangle().setX(x - 8).setY(y).setWidth(w + 8).setHeight(200)
+            .setFillColor(PANEL).setLineWidth(1).setLineColor(BORDER);
+        gem.createRectangle().setX(x - 8).setY(y).setWidth(4).setHeight(200).setFillColor(c);
+        gem.createText(gm.getPlayer(p).getNicknameToken())
+            .setX(x + 8).setY(y + 12).setFillColor(TXT).setFontSize(26)
+            .setFontWeight(Text.FontWeight.BOLD);
+        gem.createText("PLAYER " + p).setX(x + 8).setY(y + 48)
+            .setFillColor(c).setFontSize(14).setFontWeight(Text.FontWeight.BOLD);
+
+        scoreTexts[p] = gem.createText("Score: " + GameLogic.computeScore(board, p))
+            .setX(x + 8).setY(y + 78).setFillColor(TXT).setFontSize(22);
+        energyTexts[p] = gem.createText("Energy: " + board.energy[p])
+            .setX(x + 8).setY(y + 112).setFillColor(DIM).setFontSize(18);
+        bars[p] = gem.createRectangle().setX(x + 8).setY(y + 140)
+            .setWidth(Math.max(1, Math.min(board.energy[p] * 3, w - 20)))
+            .setHeight(8).setFillColor(c).setAlpha(0.7);
+        cellTexts[p] = gem.createText("Cells: " + board.playerCells[p].size())
+            .setX(x + 8).setY(y + 160).setFillColor(DIM).setFontSize(18);
+    }
+
+    private void legend(int x, int y, int c, String label) {
+        gem.createCircle().setX(x + 8).setY(y + 10).setRadius(7)
+            .setFillColor(c).setAlpha(c == DEPLETED ? 0.5 : 0.85);
+        gem.createText(label).setX(x + 26).setY(y).setFillColor(DIM).setFontSize(16);
     }
 
     private static int spotColor(Board.NutrientSpot s) {
         switch (s.type) {
-            case SMALL:  return SPOT_S_COLOR;
-            case MEDIUM: return SPOT_M_COLOR;
-            case LARGE:  return SPOT_L_COLOR;
-            default:     return DEPLETED_COLOR;
+            case SMALL:  return SPOT_S;
+            case MEDIUM: return SPOT_M;
+            case LARGE:  return SPOT_L;
+            default:     return DEPLETED;
         }
     }
 }

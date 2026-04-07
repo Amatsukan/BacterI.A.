@@ -239,11 +239,26 @@ public class GameLogic {
         Set<Board.Point> own = board.playerCells[playerIdx];
         int oppIdx = 1 - playerIdx;
         int half = board.size / 2;
+        int size = board.size;
+
+        // Build visibility bitmap: O(ownCells * (2R+1)^2) instead of O(own*opp)
+        boolean[][] visible = new boolean[size][size];
+        for (Board.Point c : own) {
+            int xMin = Math.max(0, c.x - VISION_RADIUS);
+            int xMax = Math.min(size - 1, c.x + VISION_RADIUS);
+            int yMin = Math.max(0, c.y - VISION_RADIUS);
+            int yMax = Math.min(size - 1, c.y + VISION_RADIUS);
+            for (int vy = yMin; vy <= yMax; vy++) {
+                for (int vx = xMin; vx <= xMax; vx++) {
+                    visible[vy][vx] = true;
+                }
+            }
+        }
 
         vs.myCells.addAll(own);
 
         for (Board.Point opp : board.playerCells[oppIdx]) {
-            if (isWithinVisionOfAny(own, opp.x, opp.y)) {
+            if (visible[opp.y][opp.x]) {
                 vs.oppCells.add(opp);
             }
         }
@@ -251,21 +266,12 @@ public class GameLogic {
         boolean isPlayer0 = (playerIdx == 0);
         for (Board.NutrientSpot spot : board.spots) {
             boolean ownHalf = isPlayer0 ? (spot.x < half) : (spot.x >= half);
-            if (ownHalf || isWithinVisionOfAny(own, spot.x, spot.y)) {
+            if (ownHalf || visible[spot.y][spot.x]) {
                 vs.visibleSpots.add(spot);
             }
         }
 
         return vs;
-    }
-
-    private static boolean isWithinVisionOfAny(Set<Board.Point> cells, int tx, int ty) {
-        for (Board.Point c : cells) {
-            if (chebyshevDistance(c.x, c.y, tx, ty) <= VISION_RADIUS) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // -----------------------------------------------------------------------

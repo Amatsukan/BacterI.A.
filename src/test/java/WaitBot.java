@@ -1,35 +1,38 @@
 import java.util.Scanner;
 
-/**
- * Bot minimo de teste: le o protocolo do Referee e responde WAIT.
- */
 public class WaitBot {
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
 
         // Init
-        String[] initLine = in.nextLine().trim().split(" ");
-        int mapSize = Integer.parseInt(initLine[0]);
-        int myIndex = Integer.parseInt(initLine[1]);
-        int spotCount = Integer.parseInt(in.nextLine().trim());
-        for (int i = 0; i < spotCount; i++) in.nextLine();
-
-        System.err.println("[WaitBot] mapSize=" + mapSize + " myIndex=" + myIndex + " spots=" + spotCount);
+        int mapSize = in.nextInt();
+        int myIndex = in.nextInt();
+        int spotCount = in.nextInt();
+        for (int i = 0; i < spotCount; i++) {
+            in.nextInt(); in.nextInt(); in.nextInt();
+        }
 
         // Game loop
-        while (in.hasNextLine()) {
-            String eLine = in.nextLine().trim();
-            if (eLine.isEmpty()) continue;
-            String[] eParts = eLine.split(" ");
-            int myEnergy = Integer.parseInt(eParts[0]);
-            int oppEnergy = Integer.parseInt(eParts[1]);
+        while (true) {
+            int myEnergy = in.nextInt();
+            int oppEnergy = in.nextInt();
 
-            int entityCount = Integer.parseInt(in.nextLine().trim());
-            for (int i = 0; i < entityCount; i++) in.nextLine();
+            int myCellCount = in.nextInt();
+            for (int i = 0; i < myCellCount; i++) {
+                in.nextInt(); in.nextInt();
+            }
 
-            System.err.println("[WaitBot] energy=" + myEnergy + " entities=" + entityCount);
+            int oppCellCount = in.nextInt();
+            for (int i = 0; i < oppCellCount; i++) {
+                in.nextInt(); in.nextInt();
+            }
+
+            int visSpotCount = in.nextInt();
+            for (int i = 0; i < visSpotCount; i++) {
+                in.nextInt(); in.nextInt(); in.nextInt(); in.nextInt();
+            }
+
             System.out.println("WAIT");
-            System.out.flush();
         }
     }
 }
