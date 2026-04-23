@@ -32,4 +32,4 @@ sType: spot type code
 sEnergy: remaining energy in the spot
 
 OUTPUT
-Up to 5 actions separated by ; (EXPAND x y, ATTACK x y, AUTOPHAGY x y, WAIT)
+Up to 5 actions separated by ; (EXPAND x y, ATTACK x y, AUTOPHAGY x y, WAIT). Applied left-to-right; invalid EXPAND/ATTACK still cost energy.

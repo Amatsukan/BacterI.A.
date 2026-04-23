@@ -105,6 +105,7 @@
                 Place a new cell at <var>(x,&thinsp;y)</var>.
                 The target must be <b>empty</b> and <b>adjacent</b> (orthogonal or diagonal)
                 to one of your existing cells.
+                If the placement is <b>invalid</b>, the energy cost is <b>still spent</b> (wasted move).
               </td>
             </tr>
             <tr>
@@ -141,6 +142,10 @@
         <p>
           Combine multiple actions with <const>;</const> &mdash; Example:
           <code style="background:#161b22; padding:2px 6px; border-radius:3px">EXPAND 1 0; EXPAND 0 1; WAIT</code>
+        </p>
+        <p style="margin-top:10px; color:#8b949e; font-size:13px">
+          Actions on your line are applied <b>strictly in order from left to right</b>.
+          Each action uses the board state produced by the previous action on the same line.
         </p>
       </div>
 
@@ -179,9 +184,11 @@
     <h1><span class="icon icon-expert">&nbsp;</span><span>Advanced Details</span></h1>
     <div class="statement-expert-content">
       <ul style="line-height:1.8">
-        <li>Both players' actions are collected <b>simultaneously</b>, then resolved
-            in player-index order (<b>Player&nbsp;0 first</b>).
-            Within one player, actions resolve left-to-right.</li>
+        <li>Each turn, <b>all players receive their full input</b> before any program runs
+            for that turn. After both outputs are read, the referee resolves actions in
+            <b>ascending player index</b> (<b>Player&nbsp;0</b> entire line first, then <b>Player&nbsp;1</b>).
+            Resolution order is <b>not</b> based on response time. Within one player line,
+            actions resolve left-to-right.</li>
         <li>If both players EXPAND into the <b>same empty cell</b>, the
             first-resolved player claims it.</li>
         <li>A failed EXPAND (occupied or not adjacent) <b>still costs</b> energy.</li>
@@ -238,12 +245,16 @@
       </div>
     </div>
 
-    <div class="blk">
+      <div class="blk">
       <div class="title">Output</div>
       <div class="text">
         <p>A <b>single line</b> with up to <const>5</const> actions separated by <const>;</const></p>
         <p style="margin-top:6px">Example:
           <code style="background:#161b22; padding:2px 6px; border-radius:3px">EXPAND 1 0; ATTACK 3 4; WAIT</code>
+        </p>
+        <p style="margin-top:8px; color:#8b949e; font-size:13px">
+          Execution order: left-to-right on your line; then the other player&rsquo;s full line
+          (see Advanced Details). Invalid <action>EXPAND</action> / <action>ATTACK</action> still consume energy.
         </p>
       </div>
     </div>
