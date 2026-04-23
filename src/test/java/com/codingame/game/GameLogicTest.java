@@ -22,24 +22,24 @@ class GameLogicTest {
     class ParseActions {
 
         @Test void singleWait() {
-            List<GameLogic.Action> a = GameLogic.parseActions("WAIT");
+            List<ActionParser.Action> a = GameLogic.parseActions("WAIT");
             assertEquals(1, a.size());
-            assertEquals(GameLogic.ActionType.WAIT, a.get(0).type);
+            assertEquals(ActionParser.ActionType.WAIT, a.get(0).type);
         }
 
         @Test void expandWithCoords() {
-            GameLogic.Action a = GameLogic.parseActions("EXPAND 10 15").get(0);
-            assertEquals(GameLogic.ActionType.EXPAND, a.type);
+            ActionParser.Action a = GameLogic.parseActions("EXPAND 10 15").get(0);
+            assertEquals(ActionParser.ActionType.EXPAND, a.type);
             assertEquals(10, a.x);
             assertEquals(15, a.y);
         }
 
         @Test void multipleActions() {
-            List<GameLogic.Action> a = GameLogic.parseActions("EXPAND 1 2; ATTACK 3 4; WAIT");
+            List<ActionParser.Action> a = GameLogic.parseActions("EXPAND 1 2; ATTACK 3 4; WAIT");
             assertEquals(3, a.size());
-            assertEquals(GameLogic.ActionType.EXPAND, a.get(0).type);
-            assertEquals(GameLogic.ActionType.ATTACK, a.get(1).type);
-            assertEquals(GameLogic.ActionType.WAIT, a.get(2).type);
+            assertEquals(ActionParser.ActionType.EXPAND, a.get(0).type);
+            assertEquals(ActionParser.ActionType.ATTACK, a.get(1).type);
+            assertEquals(ActionParser.ActionType.WAIT, a.get(2).type);
         }
 
         @Test void fiveActionsAllowed() {
@@ -76,23 +76,23 @@ class GameLogicTest {
     class Energy {
 
         @Test void expandCosts2() {
-            assertTrue(GameLogic.canAfford(2, GameLogic.ActionType.EXPAND));
-            assertFalse(GameLogic.canAfford(1, GameLogic.ActionType.EXPAND));
-            assertEquals(8, GameLogic.applyEnergyCost(10, GameLogic.ActionType.EXPAND));
+            assertTrue(GameLogic.canAfford(2, ActionParser.ActionType.EXPAND));
+            assertFalse(GameLogic.canAfford(1, ActionParser.ActionType.EXPAND));
+            assertEquals(8, GameLogic.applyEnergyCost(10, ActionParser.ActionType.EXPAND));
         }
 
         @Test void attackCosts2() {
-            assertTrue(GameLogic.canAfford(2, GameLogic.ActionType.ATTACK));
-            assertEquals(3, GameLogic.applyEnergyCost(5, GameLogic.ActionType.ATTACK));
+            assertTrue(GameLogic.canAfford(2, ActionParser.ActionType.ATTACK));
+            assertEquals(3, GameLogic.applyEnergyCost(5, ActionParser.ActionType.ATTACK));
         }
 
         @Test void autophagyReturns1() {
-            assertTrue(GameLogic.canAfford(0, GameLogic.ActionType.AUTOPHAGY));
-            assertEquals(6, GameLogic.applyEnergyCost(5, GameLogic.ActionType.AUTOPHAGY));
+            assertTrue(GameLogic.canAfford(0, ActionParser.ActionType.AUTOPHAGY));
+            assertEquals(6, GameLogic.applyEnergyCost(5, ActionParser.ActionType.AUTOPHAGY));
         }
 
         @Test void waitFree() {
-            assertEquals(5, GameLogic.applyEnergyCost(5, GameLogic.ActionType.WAIT));
+            assertEquals(5, GameLogic.applyEnergyCost(5, ActionParser.ActionType.WAIT));
         }
     }
 
@@ -197,32 +197,32 @@ class GameLogicTest {
         }
 
         @Test void ownCellAlwaysVisible() {
-            GameLogic.VisibleState vs = GameLogic.getVisibleEntities(b, 0);
+            VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(1, vs.myCells.size());
             assertEquals(10, vs.myCells.get(0).x);
         }
 
         @Test void enemyAtDistance3Visible() {
             b.placeCell(1, 13, 10); // distance 3 from (10,10)
-            GameLogic.VisibleState vs = GameLogic.getVisibleEntities(b, 0);
+            VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(1, vs.oppCells.size());
         }
 
         @Test void enemyAtDistance4Invisible() {
             b.placeCell(1, 14, 10); // distance 4
-            GameLogic.VisibleState vs = GameLogic.getVisibleEntities(b, 0);
+            VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(0, vs.oppCells.size());
         }
 
         @Test void ownHalfSpotsAlwaysVisible() {
-            GameLogic.VisibleState vs = GameLogic.getVisibleEntities(b, 0);
+            VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             boolean seesOwnSpot = vs.visibleSpots.stream()
                 .anyMatch(s -> s.x == 5 && s.y == 5);
             assertTrue(seesOwnSpot);
         }
 
         @Test void enemyHalfSpotInvisibleIfFar() {
-            GameLogic.VisibleState vs = GameLogic.getVisibleEntities(b, 0);
+            VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             boolean seesEnemySpot = vs.visibleSpots.stream()
                 .anyMatch(s -> s.x == 55 && s.y == 55);
             assertFalse(seesEnemySpot);
@@ -302,12 +302,12 @@ class GameLogicTest {
             assertEquals(0, GameLogic.resolveAttack(b, 0, 6, 5));
         }
 
-        @Test void cellsDestroyedIncremented() {
+        @Test void destroyedEnemyCellsIncremented() {
             b.placeCell(0, 5, 5);
             b.placeCell(0, 5, 6);
             b.placeCell(1, 6, 5);
             GameLogic.resolveAttack(b, 0, 6, 5);
-            assertEquals(1, b.cellsDestroyed[0]);
+            assertEquals(1, b.destroyedEnemyCells[0]);
         }
     }
 
@@ -422,7 +422,7 @@ class GameLogicTest {
             b.energy[0] = 0;
             b.energy[1] = 0;
             // equal score, p1 destroyed more
-            b.cellsDestroyed[1] = 3;
+            b.destroyedEnemyCells[1] = 3;
             assertEquals(1, GameLogic.checkGameOver(b, 500));
         }
     }

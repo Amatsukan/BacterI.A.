@@ -6,6 +6,8 @@ import com.codingame.gameengine.core.MultiplayerGameManager;
 import com.codingame.gameengine.module.entities.GraphicEntityModule;
 import com.google.inject.Inject;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Referee extends AbstractReferee {
@@ -16,173 +18,130 @@ public class Referee extends AbstractReferee {
     private Board board;
     private View view;
 
+    private static List<Player> sortedByIndex(List<Player> players) {
+        List<Player> list = new ArrayList<>(players);
+        list.sort(Comparator.comparingInt(Player::getIndex));
+        return list;
+    }
+
+    /**
+     * Sends initialization lines in the exact order defined by {@code config/stub.txt}.
+     */
     private void sendInitInput() {
-        for (Player player : gameManager.getPlayers()) {
+        for (Player player : sortedByIndex(gameManager.getPlayers())) {
             int idx = player.getIndex();
-            int half = board.size / 2;
-            boolean isP0 = (idx == 0);
-
-            player.sendInputLine(board.size + " " + idx);
-
-            List<Board.NutrientSpot> ownHalfSpots = new java.util.ArrayList<>();
-            for (Board.NutrientSpot s : board.spots) {
-                boolean ownHalf = isP0 ? (s.x < half) : (s.x >= half);
-                if (ownHalf) ownHalfSpots.add(s);
-            }
-
-            player.sendInputLine(String.valueOf(ownHalfSpots.size()));
-            for (Board.NutrientSpot s : ownHalfSpots) {
-                player.sendInputLine(s.x + " " + s.y + " " + s.type.code);
+            for (String line : TurnProtocol.buildInitInputLines(board, idx)) {
+                player.sendInputLine(line);
             }
         }
     }
 
     @Override
     public void init() {
-        try {
-            System.err.println("[DEBUG] A iniciar o init() do Referee...");
-            
-            int size = 64;
-            board = new Board(size);
-            System.err.println("[DEBUG] Board criado.");
-            
-            GameLogic.generateMap(board, gameManager.getRandom(), size);
-            System.err.println("[DEBUG] Mapa gerado com sucesso.");
+        int size = 64;
+        board = new Board(size);
 
-            int e0 = GameLogic.computeStartingEnergy(board, 0, 0);
-            int e1 = GameLogic.computeStartingEnergy(board, size - 1, size - 1);
-            board.energy[0] = e0;
-            board.energy[1] = e1;
-            System.err.println("[DEBUG] Energia inicial calculada: P0=" + e0 + ", P1=" + e1);
+        GameLogic.generateMap(board, gameManager.getRandom(), size);
 
-            gameManager.setMaxTurns(GameLogic.MAX_TURNS);
-            gameManager.setTurnMaxTime(50);
-            gameManager.setFirstTurnMaxTime(1000);
-            gameManager.setFrameDuration(400);
+        int e0 = GameLogic.computeStartingEnergy(board, 0, 0);
+        int e1 = GameLogic.computeStartingEnergy(board, size - 1, size - 1);
+        board.energy[0] = e0;
+        board.energy[1] = e1;
 
-            sendInitInput();
-            System.err.println("[DEBUG] Input de inicializacao enviado aos jogadores.");
+        gameManager.setMaxTurns(GameConfig.MAX_TURNS);
+        gameManager.setTurnMaxTime(50);
+        gameManager.setFirstTurnMaxTime(1000);
+        gameManager.setFrameDuration(400);
 
-            view = new View(graphicEntityModule, board, gameManager);
-            view.init();
-            System.err.println("[DEBUG] View inicializada com sucesso. Fim do init().");
+        sendInitInput();
 
-        } catch (Exception e) {
-            // Isto vai forçar o erro vermelho a aparecer detalhado na consola do browser!
-            System.err.println("[ERRO FATAL NO INIT] O Referee crashou aqui:");
-            e.printStackTrace();
-            throw e; // Lança novamente para a engine parar
-        }
+        view = new View(graphicEntityModule, board, gameManager);
+        view.init();
     }
 
     @Override
     public void gameTurn(int turn) {
-        try {
-            System.err.println("[DEBUG] --- Inicio do Turno " + turn + " ---");
-            
-            // Send turn input
-            for (Player player : gameManager.getActivePlayers()) {
-                int idx = player.getIndex();
-                int oppIdx = 1 - idx;
-                GameLogic.VisibleState vs = GameLogic.getVisibleEntities(board, idx);
-
-                player.sendInputLine(board.energy[idx] + " " + board.energy[oppIdx]);
-
-                int entityCount = vs.myCells.size() + vs.oppCells.size() + vs.visibleSpots.size();
-                player.sendInputLine(String.valueOf(entityCount));
-
-                for (Board.Point c : vs.myCells) {
-                    player.sendInputLine("MYCELL " + c.x + " " + c.y);
-                }
-                for (Board.Point c : vs.oppCells) {
-                    player.sendInputLine("OPPCELL " + c.x + " " + c.y);
-                }
-                for (Board.NutrientSpot s : vs.visibleSpots) {
-                    player.sendInputLine("SPOT " + s.x + " " + s.y + " " + s.type.code + " " + s.remainingEnergy);
-                }
-
-                player.execute();
+        // Per-turn lines after the first line match config/stub.txt (see TurnProtocol.buildTurnInputLines).
+        for (Player player : sortedByIndex(gameManager.getActivePlayers())) {
+            int idx = player.getIndex();
+            int oppIdx = 1 - idx;
+            VisibleState vs = FogOfWarService.getVisibleEntities(board, idx);
+            player.sendInputLine(board.energy[idx] + " " + board.energy[oppIdx]);
+            for (String line : TurnProtocol.buildTurnInputLines(vs)) {
+                player.sendInputLine(line);
             }
-            System.err.println("[DEBUG] Inputs enviados aos jogadores.");
+        }
+        for (Player player : sortedByIndex(gameManager.getActivePlayers())) {
+            player.execute();
+        }
 
-            // Collect and resolve actions
-            for (Player player : gameManager.getActivePlayers()) {
-                int idx = player.getIndex();
-                try {
-                    List<String> outputs = player.getOutputs();
-                    System.err.println("[DEBUG] P" + idx + " Output recebido: " + (outputs.isEmpty() ? "VAZIO" : outputs.get(0)));
-                    
-                    List<GameLogic.Action> actions = GameLogic.parseActions(outputs.get(0));
+        // Resolve in ascending player index: player 0's full action list, then player 1's (deterministic).
+        for (Player player : sortedByIndex(gameManager.getActivePlayers())) {
+            int idx = player.getIndex();
+            try {
+                List<String> outputs = player.getOutputs();
+                List<ActionParser.Action> actions = ActionParser.parseActions(outputs.get(0));
 
-                    for (GameLogic.Action action : actions) {
-                        if (!GameLogic.canAfford(board.energy[idx], action.type)) {
-                            gameManager.addToGameSummary(
-                                player.getNicknameToken() + ": insufficient energy for " + action.type);
-                            continue;
-                        }
-
-                        switch (action.type) {
-                            case EXPAND:
-                                board.energy[idx] = GameLogic.applyEnergyCost(board.energy[idx], action.type);
-                                if (!GameLogic.resolveExpand(board, idx, action.x, action.y)) {
-                                    gameManager.addToGameSummary(
-                                        player.getNicknameToken() + ": invalid EXPAND " + action.x + " " + action.y);
-                                }
-                                break;
-                            case ATTACK:
-                                board.energy[idx] = GameLogic.applyEnergyCost(board.energy[idx], action.type);
-                                int reward = GameLogic.resolveAttack(board, idx, action.x, action.y);
-                                board.energy[idx] += reward;
-                                break;
-                            case AUTOPHAGY:
-                                if (GameLogic.resolveAutophagy(board, idx, action.x, action.y)) {
-                                    board.energy[idx] = GameLogic.applyEnergyCost(board.energy[idx], action.type);
-                                } else {
-                                    gameManager.addToGameSummary(
-                                        player.getNicknameToken() + ": invalid AUTOPHAGY " + action.x + " " + action.y);
-                                }
-                                break;
-                            case WAIT:
-                                break;
-                        }
+                for (ActionParser.Action action : actions) {
+                    if (!EnergyService.canAfford(board.energy[idx], action.type)) {
+                        gameManager.addToGameSummary(
+                            player.getNicknameToken() + ": insufficient energy for " + action.type);
+                        continue;
                     }
-                } catch (TimeoutException e) {
-                    System.err.println("[DEBUG] Timeout detetado no P" + idx);
-                    player.deactivate("Timeout!");
-                    player.setScore(-1);
-                    gameManager.addToGameSummary(player.getNicknameToken() + " timed out.");
-                    gameManager.endGame();
-                    return;
-                } catch (Exception e) {
-                    System.err.println("[DEBUG] Erro ao processar turno do P" + idx + ": " + e.getMessage());
-                    player.deactivate("Error: " + e.getMessage());
-                    player.setScore(-1);
-                    gameManager.addToGameSummary(player.getNicknameToken() + " error: " + e.getMessage());
-                    gameManager.endGame();
-                    return;
+
+                    switch (action.type) {
+                        case EXPAND:
+                            board.energy[idx] = EnergyService.applyEnergyCost(board.energy[idx], action.type);
+                            if (!ActionResolver.resolveExpand(board, idx, action.x, action.y)) {
+                                gameManager.addToGameSummary(
+                                    player.getNicknameToken() + ": invalid EXPAND " + action.x + " " + action.y);
+                            }
+                            break;
+                        case ATTACK:
+                            board.energy[idx] = EnergyService.applyEnergyCost(board.energy[idx], action.type);
+                            int reward = ActionResolver.resolveAttack(board, idx, action.x, action.y);
+                            board.energy[idx] += reward;
+                            break;
+                        case AUTOPHAGY:
+                            if (ActionResolver.resolveAutophagy(board, idx, action.x, action.y)) {
+                                board.energy[idx] = EnergyService.applyEnergyCost(board.energy[idx], action.type);
+                            } else {
+                                gameManager.addToGameSummary(
+                                    player.getNicknameToken() + ": invalid AUTOPHAGY " + action.x + " " + action.y);
+                            }
+                            break;
+                        case WAIT:
+                            break;
+                    }
                 }
-            }
-
-            System.err.println("[DEBUG] Accoes resolvidas. A aplicar extracao passiva.");
-            GameLogic.passiveExtraction(board);
-            view.update(board, turn);
-
-            int result = GameLogic.checkGameOver(board, turn);
-            System.err.println("[DEBUG] Estado do jogo apos turno " + turn + ": result = " + result);
-            if (result != -2) {
+            } catch (TimeoutException e) {
+                player.deactivate("Timeout!");
+                player.setScore(-1);
+                gameManager.addToGameSummary(player.getNicknameToken() + " timed out.");
                 gameManager.endGame();
+                return;
+            } catch (Exception e) {
+                player.deactivate("Error: " + e.getMessage());
+                player.setScore(-1);
+                gameManager.addToGameSummary(player.getNicknameToken() + " error: " + e.getMessage());
+                gameManager.endGame();
+                return;
             }
-        } catch (Exception e) {
-            System.err.println("[ERRO FATAL NO TURNO " + turn + "] O Referee crashou aqui:");
-            e.printStackTrace();
-            throw e;
+        }
+
+        EnergyService.passiveNutrientExtraction(board);
+        view.update(board, turn);
+
+        int result = VictoryChecker.checkGameOver(board, turn);
+        if (result != -2) {
+            gameManager.endGame();
         }
     }
 
     @Override
     public void onEnd() {
-        int s0 = GameLogic.computeScore(board, 0);
-        int s1 = GameLogic.computeScore(board, 1);
+        int s0 = VictoryChecker.computeScore(board, 0);
+        int s1 = VictoryChecker.computeScore(board, 1);
         gameManager.getPlayer(0).setScore(s0);
         gameManager.getPlayer(1).setScore(s1);
         gameManager.addToGameSummary("Final scores — P0: " + s0 + "  P1: " + s1);

@@ -18,7 +18,8 @@ public class Board {
     @SuppressWarnings("unchecked")
     public final Set<Point>[] playerCells = new Set[]{new HashSet<>(), new HashSet<>()};
     public final int[] energy = new int[2];
-    public final int[] cellsDestroyed = new int[2];
+    /** Enemy cells destroyed by this player (tiebreaker at turn limit). */
+    public final int[] destroyedEnemyCells = new int[2];
 
     public Board(int size) {
         this.size = size;
@@ -27,10 +28,6 @@ public class Board {
 
     public int getOwner(int x, int y) {
         return cells[y][x];
-    }
-
-    public void setOwner(int x, int y, int owner) {
-        cells[y][x] = owner;
     }
 
     public void placeCell(int playerIdx, int x, int y) {

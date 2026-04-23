@@ -142,14 +142,15 @@ public class View {
         }
 
         // 3. HUD (cheap text updates)
-        turnText.setText("Turn " + turn + " / " + GameLogic.MAX_TURNS);
+        turnText.setText("Turn " + turn + " / " + GameConfig.MAX_TURNS);
         int maxBar = WORLD_W - (GRID_X + cellPx * size + 60);
         for (int p = 0; p < 2; p++) {
-            scoreTexts[p].setText("Score: " + GameLogic.computeScore(board, p));
+            scoreTexts[p].setText("Score: " + VictoryChecker.computeScore(board, p));
             energyTexts[p].setText("Energy: " + board.energy[p]);
             cellTexts[p].setText("Cells: " + board.playerCells[p].size());
             bars[p].setWidth(Math.max(1, Math.min(board.energy[p] * 3, maxBar)));
         }
+        gem.commitWorldState(turn);
     }
 
     /* ---- entity pool ---------------------------------------------------- */
@@ -192,7 +193,7 @@ public class View {
 
         gem.createText("BacterI.A.").setX(hx).setY(24)
             .setFillColor(TXT).setFontSize(36).setFontWeight(Text.FontWeight.BOLD);
-        turnText = gem.createText("Turn 0 / " + GameLogic.MAX_TURNS)
+        turnText = gem.createText("Turn 0 / " + GameConfig.MAX_TURNS)
             .setX(hx).setY(72).setFillColor(DIM).setFontSize(22);
 
         playerPanel(hx, 130, hw, 0);
@@ -218,7 +219,7 @@ public class View {
         gem.createText("PLAYER " + p).setX(x + 8).setY(y + 48)
             .setFillColor(c).setFontSize(14).setFontWeight(Text.FontWeight.BOLD);
 
-        scoreTexts[p] = gem.createText("Score: " + GameLogic.computeScore(board, p))
+        scoreTexts[p] = gem.createText("Score: " + VictoryChecker.computeScore(board, p))
             .setX(x + 8).setY(y + 78).setFillColor(TXT).setFontSize(22);
         energyTexts[p] = gem.createText("Energy: " + board.energy[p])
             .setX(x + 8).setY(y + 112).setFillColor(DIM).setFontSize(18);
