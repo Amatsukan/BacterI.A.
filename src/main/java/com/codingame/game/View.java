@@ -109,7 +109,14 @@ public class View {
         }
 
         buildHUD();
+        // GraphicEntityModule expects a normalized instant in [0, 1], not a turn index.
         gem.commitWorldState(0);
+    }
+
+    /** Normalized frame key for {@link GraphicEntityModule#commitWorldState(double)} (must stay in [0, 1]). */
+    private double frameInstantForTurn(int turn) {
+        int max = Math.max(1, gm.getMaxTurns());
+        return Math.min(1.0, Math.max(0.0, (double) turn / max));
     }
 
     /* ---- delta update --------------------------------------------------- */
@@ -150,7 +157,7 @@ public class View {
             cellTexts[p].setText("Cells: " + board.playerCells[p].size());
             bars[p].setWidth(Math.max(1, Math.min(board.energy[p] * 3, maxBar)));
         }
-        gem.commitWorldState(turn);
+        gem.commitWorldState(frameInstantForTurn(turn));
     }
 
     /* ---- entity pool ---------------------------------------------------- */

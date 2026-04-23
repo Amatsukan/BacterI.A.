@@ -12,7 +12,11 @@ public final class GameConfig {
     public static final int ATTACK_COST = 2;
     public static final int ATTACK_REWARD = 3;
     public static final int VISION_RADIUS = 3;
-    public static final int MAX_TURNS = 500;
+    /**
+     * Hard-capped by the game engine: each player {@code execute()} adds at least 50ms to an internal
+     * total (see {@code GameManager.addTurnTime}); with two players, {@code 2 * MAX_TURNS * 50} must stay ≤ 30000.
+     */
+    public static final int MAX_TURNS = 300;
 
     public static final int MIN_SPOTS = 8;
     public static final int MAX_SPOTS = 12;

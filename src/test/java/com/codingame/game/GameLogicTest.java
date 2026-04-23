@@ -412,7 +412,7 @@ class GameLogicTest {
             b.energy[0] = 10;
             b.energy[1] = 5;
             // p0: 2*100+10=210, p1: 1*100+5=105
-            assertEquals(0, GameLogic.checkGameOver(b, 500));
+            assertEquals(0, GameLogic.checkGameOver(b, GameConfig.MAX_TURNS));
         }
 
         @Test void tiebreakByCellsDestroyed() {
@@ -423,7 +423,7 @@ class GameLogicTest {
             b.energy[1] = 0;
             // equal score, p1 destroyed more
             b.destroyedEnemyCells[1] = 3;
-            assertEquals(1, GameLogic.checkGameOver(b, 500));
+            assertEquals(1, GameLogic.checkGameOver(b, GameConfig.MAX_TURNS));
         }
     }
 }
