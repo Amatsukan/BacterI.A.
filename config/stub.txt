@@ -15,7 +15,7 @@ STATEMENT
 Expand your bacterial colony, harvest nutrients, and destroy the opponent.
 
 INPUT
-mapSize: grid side length (always 64)
+mapSize: grid side length (square; same as referee BOARD_SIZE)
 myIndex: your player index (0 or 1)
 spotCount: number of nutrient spots visible on your half at start
 spotX, spotY: position of a nutrient spot

@@ -123,10 +123,11 @@ class GameLogicTest {
         }
 
         @Test void bounds() {
-            assertTrue(GameLogic.isInBounds(0, 0, 64));
-            assertTrue(GameLogic.isInBounds(63, 63, 64));
-            assertFalse(GameLogic.isInBounds(64, 0, 64));
-            assertFalse(GameLogic.isInBounds(-1, 0, 64));
+            int s = GameConfig.BOARD_SIZE;
+            assertTrue(GameLogic.isInBounds(0, 0, s));
+            assertTrue(GameLogic.isInBounds(s - 1, s - 1, s));
+            assertFalse(GameLogic.isInBounds(s, 0, s));
+            assertFalse(GameLogic.isInBounds(-1, 0, s));
         }
     }
 
@@ -139,15 +140,15 @@ class GameLogicTest {
     class MapGeneration {
 
         @Test void symmetricSpots() {
-            Board b = new Board(64);
-            GameLogic.generateMap(b, new Random(42), 64);
-            assertTrue(b.spots.size() >= 16); // at least 8 pairs
+            Board b = new Board(GameConfig.BOARD_SIZE);
+            GameLogic.generateMap(b, new Random(42), GameConfig.BOARD_SIZE);
+            assertTrue(b.spots.size() >= 4); // at least 2 mirrored pairs
             assertTrue(b.spots.size() % 2 == 0);
         }
 
         @Test void spotsInBounds() {
-            Board b = new Board(64);
-            GameLogic.generateMap(b, new Random(123), 64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
+            GameLogic.generateMap(b, new Random(123), GameConfig.BOARD_SIZE);
             for (Board.NutrientSpot s : b.spots) {
                 assertTrue(s.x >= 0 && s.x < 64);
                 assertTrue(s.y >= 0 && s.y < 64);
@@ -155,8 +156,8 @@ class GameLogicTest {
         }
 
         @Test void noOverlappingSpots() {
-            Board b = new Board(64);
-            GameLogic.generateMap(b, new Random(7), 64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
+            GameLogic.generateMap(b, new Random(7), GameConfig.BOARD_SIZE);
             long unique = b.spots.stream()
                 .map(s -> s.x + "," + s.y)
                 .distinct().count();
@@ -164,15 +165,16 @@ class GameLogicTest {
         }
 
         @Test void playersPlaced() {
-            Board b = new Board(64);
-            GameLogic.generateMap(b, new Random(1), 64);
+            int s = GameConfig.BOARD_SIZE;
+            Board b = new Board(GameConfig.BOARD_SIZE);
+            GameLogic.generateMap(b, new Random(1), GameConfig.BOARD_SIZE);
             assertTrue(b.belongsTo(0, 0, 0));
-            assertTrue(b.belongsTo(1, 63, 63));
+            assertTrue(b.belongsTo(1, s - 1, s - 1));
         }
 
         @Test void startingEnergyReasonable() {
-            Board b = new Board(64);
-            GameLogic.generateMap(b, new Random(1), 64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
+            GameLogic.generateMap(b, new Random(1), GameConfig.BOARD_SIZE);
             int e = GameLogic.computeStartingEnergy(b, 0, 0);
             assertTrue(e >= 10 && e <= 60, "starting energy should be 10-60, got " + e);
         }
@@ -189,27 +191,27 @@ class GameLogicTest {
         private Board b;
 
         @BeforeEach void setup() {
-            b = new Board(64);
-            b.placeCell(0, 10, 10);
-            b.placeCell(1, 50, 50);
-            b.spots.add(new Board.NutrientSpot(5, 5, Board.SpotType.SMALL)); // p0 half
-            b.spots.add(new Board.NutrientSpot(55, 55, Board.SpotType.SMALL)); // p1 half
+            b = new Board(GameConfig.BOARD_SIZE);
+            b.placeCell(0, 5, 5);
+            b.placeCell(1, 10, 10);
+            b.spots.add(new Board.NutrientSpot(2, 2, Board.SpotType.SMALL)); // p0 half
+            b.spots.add(new Board.NutrientSpot(13, 13, Board.SpotType.SMALL)); // p1 half
         }
 
         @Test void ownCellAlwaysVisible() {
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(1, vs.myCells.size());
-            assertEquals(10, vs.myCells.get(0).x);
+            assertEquals(5, vs.myCells.get(0).x);
         }
 
         @Test void enemyAtDistance3Visible() {
-            b.placeCell(1, 13, 10); // distance 3 from (10,10)
+            b.placeCell(1, 8, 5); // Chebyshev distance 3 from (5,5)
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(1, vs.oppCells.size());
         }
 
         @Test void enemyAtDistance4Invisible() {
-            b.placeCell(1, 14, 10); // distance 4
+            b.placeCell(1, 9, 5); // distance 4 from (5,5)
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(0, vs.oppCells.size());
         }
@@ -217,14 +219,14 @@ class GameLogicTest {
         @Test void ownHalfSpotsAlwaysVisible() {
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             boolean seesOwnSpot = vs.visibleSpots.stream()
-                .anyMatch(s -> s.x == 5 && s.y == 5);
+                .anyMatch(s -> s.x == 2 && s.y == 2);
             assertTrue(seesOwnSpot);
         }
 
         @Test void enemyHalfSpotInvisibleIfFar() {
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             boolean seesEnemySpot = vs.visibleSpots.stream()
-                .anyMatch(s -> s.x == 55 && s.y == 55);
+                .anyMatch(s -> s.x == 13 && s.y == 13);
             assertFalse(seesEnemySpot);
         }
     }
@@ -240,7 +242,7 @@ class GameLogicTest {
         private Board b;
 
         @BeforeEach void setup() {
-            b = new Board(64);
+            b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 5, 5);
         }
 
@@ -275,7 +277,7 @@ class GameLogicTest {
         private Board b;
 
         @BeforeEach void setup() {
-            b = new Board(64);
+            b = new Board(GameConfig.BOARD_SIZE);
         }
 
         @Test void attackSucceedsWithMajority() {
@@ -320,19 +322,19 @@ class GameLogicTest {
     class Autophagy {
 
         @Test void validAutophagy() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 3, 3);
             assertTrue(GameLogic.resolveAutophagy(b, 0, 3, 3));
             assertTrue(b.isEmpty(3, 3));
         }
 
         @Test void rejectEmpty() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             assertFalse(GameLogic.resolveAutophagy(b, 0, 3, 3));
         }
 
         @Test void rejectEnemyCell() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(1, 3, 3);
             assertFalse(GameLogic.resolveAutophagy(b, 0, 3, 3));
         }
@@ -347,7 +349,7 @@ class GameLogicTest {
     class PassiveExtraction {
 
         @Test void cellOnSpotGainsEnergy() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 5, 5);
             b.spots.add(new Board.NutrientSpot(5, 5, Board.SpotType.SMALL));
             b.energy[0] = 10;
@@ -357,7 +359,7 @@ class GameLogicTest {
         }
 
         @Test void depletedSpotGivesNothing() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 5, 5);
             Board.NutrientSpot s = new Board.NutrientSpot(5, 5, Board.SpotType.SMALL);
             s.remainingEnergy = 0;
@@ -368,7 +370,7 @@ class GameLogicTest {
         }
 
         @Test void emptyCellNoExtraction() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.spots.add(new Board.NutrientSpot(5, 5, Board.SpotType.SMALL));
             b.energy[0] = 10;
             GameLogic.passiveExtraction(b);
@@ -385,30 +387,32 @@ class GameLogicTest {
     class Victory {
 
         @Test void knockoutPlayer1Wins() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(1, 10, 10);
             // player 0 has no cells
             assertEquals(1, GameLogic.checkGameOver(b, 50));
         }
 
         @Test void knockoutPlayer0Wins() {
-            Board b = new Board(64);
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 10, 10);
             assertEquals(0, GameLogic.checkGameOver(b, 50));
         }
 
         @Test void gameNotOverMidGame() {
-            Board b = new Board(64);
+            int s = GameConfig.BOARD_SIZE;
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 0, 0);
-            b.placeCell(1, 63, 63);
-            assertEquals(-2, GameLogic.checkGameOver(b, 50));
+            b.placeCell(1, s - 1, s - 1);
+            assertEquals(-2, GameLogic.checkGameOver(b, 1));
         }
 
         @Test void turnLimitScoringWorks() {
-            Board b = new Board(64);
+            int s = GameConfig.BOARD_SIZE;
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 0, 0);
             b.placeCell(0, 1, 0);
-            b.placeCell(1, 63, 63);
+            b.placeCell(1, s - 1, s - 1);
             b.energy[0] = 10;
             b.energy[1] = 5;
             // p0: 2*100+10=210, p1: 1*100+5=105
@@ -416,9 +420,10 @@ class GameLogicTest {
         }
 
         @Test void tiebreakByCellsDestroyed() {
-            Board b = new Board(64);
+            int s = GameConfig.BOARD_SIZE;
+            Board b = new Board(GameConfig.BOARD_SIZE);
             b.placeCell(0, 0, 0);
-            b.placeCell(1, 63, 63);
+            b.placeCell(1, s - 1, s - 1);
             b.energy[0] = 0;
             b.energy[1] = 0;
             // equal score, p1 destroyed more

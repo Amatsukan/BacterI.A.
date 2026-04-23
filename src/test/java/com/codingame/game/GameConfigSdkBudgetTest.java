@@ -16,5 +16,6 @@ class GameConfigSdkBudgetTest {
             * GameConfig.SDK_TURN_MAX_MS;
         assertTrue(total <= GameConfig.SDK_ACCUMULATED_TURN_TIME_BUDGET_MS,
             "2 * MAX_TURNS * turnMaxTime must stay ≤ " + GameConfig.SDK_ACCUMULATED_TURN_TIME_BUDGET_MS + " ms");
+        assertTrue(GameConfig.MAX_TURNS <= GameConfig.SDK_MAX_TURNS_BY_TIME_BUDGET);
     }
 }

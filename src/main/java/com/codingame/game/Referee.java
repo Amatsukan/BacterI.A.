@@ -38,7 +38,7 @@ public class Referee extends AbstractReferee {
 
     @Override
     public void init() {
-        int size = 64;
+        int size = GameConfig.BOARD_SIZE;
         board = new Board(size);
 
         GameLogic.generateMap(board, gameManager.getRandom(), size);

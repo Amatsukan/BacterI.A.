@@ -13,7 +13,7 @@ class ContestRulesRegressionTest {
 
     @Test
     void invalidExpandStillConsumesEnergy() {
-        Board b = new Board(64);
+        Board b = new Board(GameConfig.BOARD_SIZE);
         b.placeCell(0, 0, 0);
         b.energy[0] = 10;
         int before = b.energy[0];
@@ -24,7 +24,7 @@ class ContestRulesRegressionTest {
 
     @Test
     void invalidAttackStillConsumesEnergyNoReward() {
-        Board b = new Board(64);
+        Board b = new Board(GameConfig.BOARD_SIZE);
         b.placeCell(0, 0, 0);
         b.placeCell(1, 10, 10);
         b.energy[0] = 10;
@@ -37,7 +37,7 @@ class ContestRulesRegressionTest {
 
     @Test
     void multiActionOrder_expandThenExpandUsesFirstCell() {
-        Board b = new Board(64);
+        Board b = new Board(GameConfig.BOARD_SIZE);
         b.placeCell(0, 5, 5);
         b.energy[0] = 20;
         assertTrue(ActionResolver.resolveExpand(b, 0, 5, 6));
@@ -47,10 +47,10 @@ class ContestRulesRegressionTest {
 
     @Test
     void mapGenerationDeterministicForSeed() {
-        Board a = new Board(64);
-        Board c = new Board(64);
-        MapGenerator.generateMap(a, new Random(42), 64);
-        MapGenerator.generateMap(c, new Random(42), 64);
+        Board a = new Board(GameConfig.BOARD_SIZE);
+        Board c = new Board(GameConfig.BOARD_SIZE);
+        MapGenerator.generateMap(a, new Random(42), GameConfig.BOARD_SIZE);
+        MapGenerator.generateMap(c, new Random(42), GameConfig.BOARD_SIZE);
         assertEquals(a.spots.size(), c.spots.size());
         for (int i = 0; i < a.spots.size(); i++) {
             assertEquals(a.spots.get(i).x, c.spots.get(i).x);
@@ -61,8 +61,8 @@ class ContestRulesRegressionTest {
 
     @Test
     void spotsRespectMinSpawnChebyshevFromP0Corner() {
-        Board b = new Board(64);
-        MapGenerator.generateMap(b, new Random(99), 64);
+        Board b = new Board(GameConfig.BOARD_SIZE);
+        MapGenerator.generateMap(b, new Random(99), GameConfig.BOARD_SIZE);
         int half = b.size / 2;
         for (Board.NutrientSpot s : b.spots) {
             if (s.x < half) {
