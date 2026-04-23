@@ -27,7 +27,7 @@
           <span style="color:#22a1e4">&#9654;</span> The Map
         </h2>
         <ul>
-          <li>A <const>16 &times; 16</const> square grid.</li>
+          <li>A <const>64 &times; 64</const> square grid.</li>
           <li><b>Player&nbsp;0</b> starts with one cell at <const>(0,&thinsp;0)</const> (top-left).</li>
           <li><b>Player&nbsp;1</b> starts with one cell at <const>(63,&thinsp;63)</const> (bottom-right).</li>
           <li><b>Nutrient spots</b> are placed symmetrically (180&deg; rotation).</li>
@@ -168,7 +168,7 @@
         </h2>
         <ol>
           <li><b>Knockout</b> &mdash; Destroy <b>all</b> of your opponent's cells.</li>
-          <li><b>Turn limit</b> (<const>2</const> turns) &mdash;
+          <li><b>Turn limit</b> (<const>300</const> turns) &mdash;
               Highest score wins.<br>
               <span style="color:#c9d1d9">Score</span> =
               <code style="background:#161b22; padding:2px 6px; border-radius:3px">cells &times; 100 + energy</code><br>
@@ -210,7 +210,7 @@
       <div class="text">
         <p><b>Line 1:</b> two space-separated integers:</p>
         <ul>
-          <li><var>mapSize</var> &mdash; grid side length (here <const>16</const>)</li>
+          <li><var>mapSize</var> &mdash; grid side length (always <const>64</const>)</li>
           <li><var>myIndex</var> &mdash; your player index (<const>0</const> or <const>1</const>)</li>
         </ul>
         <p><b>Line 2:</b> one integer <var>spotCount</var> &mdash;
@@ -263,8 +263,8 @@
       <div class="title">Constraints</div>
       <div class="text">
         <table style="width:auto; margin:4px 0">
-          <tr><td style="padding:2px 20px 2px 0">Grid size</td><td><const>16 &times; 16</const></td></tr>
-          <tr><td style="padding:2px 20px 2px 0">Max turns</td><td><const>2</const></td></tr>
+          <tr><td style="padding:2px 20px 2px 0">Grid size</td><td><const>64 &times; 64</const></td></tr>
+          <tr><td style="padding:2px 20px 2px 0">Max turns</td><td><const>300</const></td></tr>
           <tr><td style="padding:2px 20px 2px 0">Max actions per turn</td><td><const>5</const></td></tr>
           <tr><td style="padding:2px 20px 2px 0">Response time per turn</td><td>&le; <const>50 ms</const></td></tr>
           <tr><td style="padding:2px 20px 2px 0">First turn response time</td><td>&le; <const>1000 ms</const></td></tr>

@@ -1,1 +1,1 @@
-export const demo = null;
+export const demo = undefined

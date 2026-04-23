@@ -142,16 +142,17 @@ class GameLogicTest {
         @Test void symmetricSpots() {
             Board b = new Board(GameConfig.BOARD_SIZE);
             GameLogic.generateMap(b, new Random(42), GameConfig.BOARD_SIZE);
-            assertTrue(b.spots.size() >= 4); // at least 2 mirrored pairs
+            assertTrue(b.spots.size() >= 16); // at least 8 mirrored pairs
             assertTrue(b.spots.size() % 2 == 0);
         }
 
         @Test void spotsInBounds() {
             Board b = new Board(GameConfig.BOARD_SIZE);
             GameLogic.generateMap(b, new Random(123), GameConfig.BOARD_SIZE);
+            int sz = GameConfig.BOARD_SIZE;
             for (Board.NutrientSpot s : b.spots) {
-                assertTrue(s.x >= 0 && s.x < 64);
-                assertTrue(s.y >= 0 && s.y < 64);
+                assertTrue(s.x >= 0 && s.x < sz);
+                assertTrue(s.y >= 0 && s.y < sz);
             }
         }
 
@@ -192,26 +193,26 @@ class GameLogicTest {
 
         @BeforeEach void setup() {
             b = new Board(GameConfig.BOARD_SIZE);
-            b.placeCell(0, 5, 5);
-            b.placeCell(1, 10, 10);
-            b.spots.add(new Board.NutrientSpot(2, 2, Board.SpotType.SMALL)); // p0 half
-            b.spots.add(new Board.NutrientSpot(13, 13, Board.SpotType.SMALL)); // p1 half
+            b.placeCell(0, 10, 10);
+            b.placeCell(1, 50, 50);
+            b.spots.add(new Board.NutrientSpot(5, 5, Board.SpotType.SMALL)); // p0 half
+            b.spots.add(new Board.NutrientSpot(55, 55, Board.SpotType.SMALL)); // p1 half
         }
 
         @Test void ownCellAlwaysVisible() {
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(1, vs.myCells.size());
-            assertEquals(5, vs.myCells.get(0).x);
+            assertEquals(10, vs.myCells.get(0).x);
         }
 
         @Test void enemyAtDistance3Visible() {
-            b.placeCell(1, 8, 5); // Chebyshev distance 3 from (5,5)
+            b.placeCell(1, 13, 10); // distance 3 from (10,10)
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(1, vs.oppCells.size());
         }
 
         @Test void enemyAtDistance4Invisible() {
-            b.placeCell(1, 9, 5); // distance 4 from (5,5)
+            b.placeCell(1, 14, 10); // distance 4
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             assertEquals(0, vs.oppCells.size());
         }
@@ -219,14 +220,14 @@ class GameLogicTest {
         @Test void ownHalfSpotsAlwaysVisible() {
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             boolean seesOwnSpot = vs.visibleSpots.stream()
-                .anyMatch(s -> s.x == 2 && s.y == 2);
+                .anyMatch(s -> s.x == 5 && s.y == 5);
             assertTrue(seesOwnSpot);
         }
 
         @Test void enemyHalfSpotInvisibleIfFar() {
             VisibleState vs = GameLogic.getVisibleEntities(b, 0);
             boolean seesEnemySpot = vs.visibleSpots.stream()
-                .anyMatch(s -> s.x == 13 && s.y == 13);
+                .anyMatch(s -> s.x == 55 && s.y == 55);
             assertFalse(seesEnemySpot);
         }
     }

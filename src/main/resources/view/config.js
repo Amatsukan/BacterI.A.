@@ -26,9 +26,9 @@ export const playerColors = [
 export const options = [];
 
 // -----------------------------------------------------------------------
-// Dados de demonstração (null = sem replay de demo)
+// Dados de demonstração (undefined = sem replay de demo no IDE)
 // -----------------------------------------------------------------------
-export const demo = null;
+export const demo = undefined
 
 // -----------------------------------------------------------------------
 // Configurações de renderização

@@ -28,25 +28,21 @@ public final class GameConfig {
     public static final int MULTIPLAYER_PLAYER_COUNT = 2;
 
     /**
-     * Upper bound from the SDK accumulated-time budget: {@code floor(30000 / (2 * 50))} = 300.
-     * Current match length is intentionally short for CodinGame IDE stability; raise toward this cap when tuning.
+     * Maximum game turns such that {@code MULTIPLAYER_PLAYER_COUNT * MAX_TURNS * SDK_TURN_MAX_MS <= SDK_ACCUMULATED_TURN_TIME_BUDGET_MS}.
+     * If you raise this, lower {@link #SDK_TURN_MAX_MS} is not possible below 50 — you must shorten games or fork the engine.
      */
-    public static final int SDK_MAX_TURNS_BY_TIME_BUDGET =
+    public static final int MAX_TURNS =
         SDK_ACCUMULATED_TURN_TIME_BUDGET_MS / (MULTIPLAYER_PLAYER_COUNT * SDK_TURN_MAX_MS);
 
-    /** Short match + small grid to reduce referee/viewer work (CodinGame IDE 10s budget). */
-    public static final int MAX_TURNS = 2;
-
     /** Square grid side (sent as {@code mapSize} in init). */
-    public static final int BOARD_SIZE = 16;
+    public static final int BOARD_SIZE = 64;
 
     /** First-turn wall-clock budget for each player (referee), independent of the 30s accumulated budget. */
     public static final int FIRST_TURN_MAX_MS = 1000;
 
-    /** Spot counts for {@link #BOARD_SIZE}; keep modest so {@link MapGenerator} can place pairs on small grids. */
-    public static final int MIN_SPOTS = 2;
-    public static final int MAX_SPOTS = 5;
-    public static final int MIN_SPOT_DISTANCE = 3;
+    public static final int MIN_SPOTS = 8;
+    public static final int MAX_SPOTS = 12;
+    public static final int MIN_SPOT_DISTANCE = 5;
     /** Chebyshev distance from (0,0) for first-half spot candidates; mirror covers P1 corner. */
-    public static final int MIN_SPAWN_CLEARANCE = 2;
+    public static final int MIN_SPAWN_CLEARANCE = 4;
 }

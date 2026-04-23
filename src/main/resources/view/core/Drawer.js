@@ -34,7 +34,9 @@ export class Drawer {
         agent.color = Drawer.playerColors[agent.index]
       })
     } else {
-      this.demo = config.demo
+      // null would skip initDefaultScene's branch but renderDefaultScene still ran (currentFrame < 0)
+      // and dereferenced scope.demo — grey screen. Use undefined so the early exit matches.
+      this.demo = config.demo == null ? undefined : config.demo
     }
   }
 
@@ -323,7 +325,8 @@ export class Drawer {
   renderDefaultScene (scope, step) {
     step = Math.min(80, step)
 
-    if (this.demo === undefined) {
+    // No bundled demo: initDefaultScene never attached scope.demo; null demo must not reach scope.demo.x below.
+    if (this.demo == null || scope.demo == null) {
       return false
     }
 

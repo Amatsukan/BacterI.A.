@@ -63,12 +63,9 @@ class TurnInputProtocolTest {
 
     @Test
     void initInputLines_matchStubAndWaitBotInit() {
-        int s = GameConfig.BOARD_SIZE;
-        int x0 = 2;
-        int y0 = 3;
-        Board b = new Board(s);
-        b.spots.add(new Board.NutrientSpot(x0, y0, Board.SpotType.SMALL));
-        b.spots.add(new Board.NutrientSpot(s - 1 - x0, s - 1 - y0, Board.SpotType.SMALL));
+        Board b = new Board(64);
+        b.spots.add(new Board.NutrientSpot(10, 20, Board.SpotType.SMALL));
+        b.spots.add(new Board.NutrientSpot(53, 43, Board.SpotType.MEDIUM));
 
         for (int myIndex : new int[] {0, 1}) {
             List<String> lines = GameLogic.buildInitInputLines(b, myIndex);
@@ -76,7 +73,7 @@ class TurnInputProtocolTest {
             try (Scanner in = new Scanner(joined)) {
                 int mapSize = in.nextInt();
                 int idx = in.nextInt();
-                assertEquals(s, mapSize);
+                assertEquals(64, mapSize);
                 assertEquals(myIndex, idx);
 
                 int spotCount = in.nextInt();
@@ -85,13 +82,13 @@ class TurnInputProtocolTest {
                 int sy = in.nextInt();
                 int st = in.nextInt();
                 if (myIndex == 0) {
-                    assertEquals(x0, sx);
-                    assertEquals(y0, sy);
+                    assertEquals(10, sx);
+                    assertEquals(20, sy);
                     assertEquals(1, st);
                 } else {
-                    assertEquals(s - 1 - x0, sx);
-                    assertEquals(s - 1 - y0, sy);
-                    assertEquals(1, st);
+                    assertEquals(53, sx);
+                    assertEquals(43, sy);
+                    assertEquals(2, st);
                 }
                 assertFalse(in.hasNextInt());
             }
