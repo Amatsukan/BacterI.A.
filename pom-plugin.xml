@@ -13,12 +13,14 @@
     </properties>
 
     <dependencies>
-        <!-- CodinGame Runner — contém Exporter, necessário para o CI do CodinGame -->
+        <!--
+            Runner provides com.codingame.gameengine.runner.Exporter for CodinGame CI.
+            Must NOT be test-scoped: the export step runs Exporter on the compile classpath.
+        -->
         <dependency>
             <groupId>com.codingame.gameengine</groupId>
             <artifactId>runner</artifactId>
             <version>4.2.0</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- CodinGame Core Engine -->
@@ -34,10 +36,22 @@
             <artifactId>module-entities</artifactId>
             <version>4.2.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.2</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

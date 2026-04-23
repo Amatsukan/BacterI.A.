@@ -29,16 +29,13 @@
         </dependency>
 
         <!--
-            Runner: simula partidas localmente via MultiplayerGameRunner.
-            Também corrige o erro "Could not find Exporter" no CI do CodinGame,
-            pois o CI gera o pom-plugin.xml a partir deste pom.xml e inclui
-            o runner no referee.jar (shade).
+            MultiplayerGameRunner for local agents; also supplies Exporter for CodinGame CI.
+            Compile scope so export/classpath steps see runner (test scope breaks Exporter).
         -->
         <dependency>
             <groupId>com.codingame.gameengine</groupId>
             <artifactId>runner</artifactId>
             <version>4.2.0</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- Testes unitários -->
