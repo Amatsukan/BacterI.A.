@@ -80,6 +80,13 @@ public class Referee extends AbstractReferee {
             int idx = player.getIndex();
             try {
                 List<String> outputs = player.getOutputs();
+                if (outputs.isEmpty()) {
+                    gameManager.addToGameSummary(player.getNicknameToken() + ": no output line (expected 1).");
+                    player.deactivate("No output");
+                    player.setScore(-1);
+                    gameManager.endGame();
+                    return;
+                }
                 List<ActionParser.Action> actions = ActionParser.parseActions(outputs.get(0));
 
                 for (ActionParser.Action action : actions) {
