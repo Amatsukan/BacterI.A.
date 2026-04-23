@@ -31,7 +31,7 @@ if not "%RESULT%"=="0" (
 echo [PASSOU] Todos os testes passaram.
 echo.
 echo ========================================================
-echo  Iniciar simulacao local? (WaitBot vs WaitBot)
+echo  Iniciar simulacao local? (Boss vs Boss)
 echo  Replay: http://localhost:8888
 echo ========================================================
 echo.
@@ -40,7 +40,7 @@ if /i "%SIMULAR%"=="S" (
     echo.
     echo A iniciar simulacao...
     echo.
-    mvn test-compile exec:exec
+    mvn test-compile exec:exec@forked-local
 )
 echo.
 pause

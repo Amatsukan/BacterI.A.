@@ -38,6 +38,7 @@
             <groupId>com.codingame.gameengine</groupId>
             <artifactId>runner</artifactId>
             <version>4.2.0</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- Testes unitários -->
@@ -52,24 +53,39 @@
     <build>
         <plugins>
             <!--
-                Simula localmente: mvn test-compile exec:exec
-                Para trocar o bot principal: mvn test-compile exec:exec -Dexec.mainClass=BossVsBoss
-                Usa exec:exec (JVM forked) para que o system classloader inclua as deps
-                do projeto, sem o qual Renderer.getSystemClassLoader() nao acha test.html.
+                In-process: mvn test-compile exec:java
+                Forked replay: mvn test-compile exec:exec@forked-local
+                Boss vs Boss: mvn test-compile exec:exec@forked-local -Dexec.mainClass=BossVsBoss
+                  Optional JVM props: -Dpython.exe=/path/to/python (else PYTHON_EXE env, else python/python3).
             -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
+                <!--
+                    exec:java usa só mainClass + classpathScope.
+                    Não misturar aqui <arguments> com <classpath/>: o goal java falha ao
+                    desserializar (element type mismatch).
+                    Simulação com JVM filha: exec:exec@forked-local (scripts run-local.bat).
+                -->
                 <configuration>
-                    <executable>java</executable>
+                    <mainClass>${exec.mainClass}</mainClass>
                     <classpathScope>test</classpathScope>
-                    <arguments>
-                        <argument>-classpath</argument>
-                        <classpath/>
-                        <argument>${exec.mainClass}</argument>
-                    </arguments>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>forked-local</id>
+                        <configuration>
+                            <executable>java</executable>
+                            <classpathScope>test</classpathScope>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>${exec.mainClass}</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Necessário para o JUnit 5 funcionar com mvn test -->

@@ -92,9 +92,7 @@ while True:
             if adj_to_mine and my_n > opp_n:
                 actions.append(f"ATTACK {ox} {oy}")
                 my_energy -= 2
-                my_energy += 3
-                my_cells.add((ox, oy))
-                opp_cells.discard((ox, oy))
+                # Do not assume capture or reward; referee state arrives next turn.
 
     # --- Phase: Expand toward nearest non-depleted nutrient ---
     undepleted = {pos: info for pos, info in known_spots.items() if info[1] > 0}

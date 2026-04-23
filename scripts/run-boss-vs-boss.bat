@@ -20,7 +20,7 @@ echo  Replay: http://localhost:8888
 echo ========================================================
 echo.
 
-mvn test-compile exec:exec "-Dexec.mainClass=BossVsBoss"
+mvn test-compile exec:exec@forked-local "-Dexec.mainClass=BossVsBoss"
 if errorlevel 1 (
     echo.
     echo [ERRO] Falhou. Veja os erros acima.

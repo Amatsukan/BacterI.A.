@@ -20,7 +20,7 @@ powershell -ExecutionPolicy Bypass -NoProfile -Command ^
     "$tmpDir = Join-Path $env:TEMP $name;" ^
     "if (Test-Path $tmpDir) { Remove-Item $tmpDir -Recurse -Force };" ^
     "New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null;" ^
-    "$items = @('.gitignore','README.md','pom.xml','pom-plugin.xml','config','doc','src');" ^
+    "$items = @('pom.xml','config','src');" ^
     "foreach ($i in $items) {" ^
     "    $src = Join-Path $root $i;" ^
     "    $dst = Join-Path $tmpDir $i;" ^
@@ -30,7 +30,8 @@ powershell -ExecutionPolicy Bypass -NoProfile -Command ^
     "New-Item -ItemType Directory -Path $scriptsDst -Force | Out-Null;" ^
     "Get-ChildItem (Join-Path $root 'scripts') -Filter '*.bat' | ForEach-Object { Copy-Item $_.FullName (Join-Path $scriptsDst $_.Name) -Force };" ^
     "if (Test-Path $out) { Remove-Item $out -Force };" ^
-    "Compress-Archive -Path $tmpDir -DestinationPath $out -Force;" ^
+    "Add-Type -AssemblyName System.IO.Compression.FileSystem;" ^
+    "[System.IO.Compression.ZipFile]::CreateFromDirectory($tmpDir, $out);" ^
     "Remove-Item $tmpDir -Recurse -Force;" ^
     "$size = [math]::Round((Get-Item $out).Length / 1KB, 1);" ^
     "Write-Host \"[OK] $out ($size KB)\""

@@ -18,6 +18,7 @@
             <groupId>com.codingame.gameengine</groupId>
             <artifactId>runner</artifactId>
             <version>4.2.0</version>
+            <scope>test</scope>
         </dependency>
 
         <!-- CodinGame Core Engine -->
