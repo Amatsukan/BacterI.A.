@@ -49,8 +49,8 @@ public class Referee extends AbstractReferee {
         board.energy[1] = e1;
 
         gameManager.setMaxTurns(GameConfig.MAX_TURNS);
-        gameManager.setTurnMaxTime(50);
-        gameManager.setFirstTurnMaxTime(1000);
+        gameManager.setTurnMaxTime(GameConfig.SDK_TURN_MAX_MS);
+        gameManager.setFirstTurnMaxTime(GameConfig.FIRST_TURN_MAX_MS);
         gameManager.setFrameDuration(400);
 
         sendInitInput();

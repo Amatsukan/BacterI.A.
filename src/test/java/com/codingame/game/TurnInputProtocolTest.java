@@ -33,32 +33,32 @@ class TurnInputProtocolTest {
         all.addAll(body);
 
         String joined = String.join("\n", all) + "\n";
-        Scanner in = new Scanner(joined);
+        try (Scanner in = new Scanner(joined)) {
+            int myEnergy = in.nextInt();
+            int oppEnergy = in.nextInt();
+            assertEquals(7, myEnergy);
+            assertEquals(9, oppEnergy);
 
-        int myEnergy = in.nextInt();
-        int oppEnergy = in.nextInt();
-        assertEquals(7, myEnergy);
-        assertEquals(9, oppEnergy);
+            int myCellCount = in.nextInt();
+            for (int i = 0; i < myCellCount; i++) {
+                in.nextInt();
+                in.nextInt();
+            }
+            int oppCellCount = in.nextInt();
+            for (int i = 0; i < oppCellCount; i++) {
+                in.nextInt();
+                in.nextInt();
+            }
+            int visSpotCount = in.nextInt();
+            for (int i = 0; i < visSpotCount; i++) {
+                in.nextInt();
+                in.nextInt();
+                in.nextInt();
+                in.nextInt();
+            }
 
-        int myCellCount = in.nextInt();
-        for (int i = 0; i < myCellCount; i++) {
-            in.nextInt();
-            in.nextInt();
+            assertFalse(in.hasNextInt());
         }
-        int oppCellCount = in.nextInt();
-        for (int i = 0; i < oppCellCount; i++) {
-            in.nextInt();
-            in.nextInt();
-        }
-        int visSpotCount = in.nextInt();
-        for (int i = 0; i < visSpotCount; i++) {
-            in.nextInt();
-            in.nextInt();
-            in.nextInt();
-            in.nextInt();
-        }
-
-        assertFalse(in.hasNextInt());
     }
 
     @Test
@@ -70,27 +70,54 @@ class TurnInputProtocolTest {
         for (int myIndex : new int[] {0, 1}) {
             List<String> lines = GameLogic.buildInitInputLines(b, myIndex);
             String joined = String.join("\n", lines) + "\n";
-            Scanner in = new Scanner(joined);
+            try (Scanner in = new Scanner(joined)) {
+                int mapSize = in.nextInt();
+                int idx = in.nextInt();
+                assertEquals(64, mapSize);
+                assertEquals(myIndex, idx);
 
-            int mapSize = in.nextInt();
-            int idx = in.nextInt();
-            assertEquals(64, mapSize);
-            assertEquals(myIndex, idx);
-
-            int spotCount = in.nextInt();
-            assertEquals(1, spotCount);
-            int sx = in.nextInt();
-            int sy = in.nextInt();
-            int st = in.nextInt();
-            if (myIndex == 0) {
-                assertEquals(10, sx);
-                assertEquals(20, sy);
-                assertEquals(1, st);
-            } else {
-                assertEquals(53, sx);
-                assertEquals(43, sy);
-                assertEquals(2, st);
+                int spotCount = in.nextInt();
+                assertEquals(1, spotCount);
+                int sx = in.nextInt();
+                int sy = in.nextInt();
+                int st = in.nextInt();
+                if (myIndex == 0) {
+                    assertEquals(10, sx);
+                    assertEquals(20, sy);
+                    assertEquals(1, st);
+                } else {
+                    assertEquals(53, sx);
+                    assertEquals(43, sy);
+                    assertEquals(2, st);
+                }
+                assertFalse(in.hasNextInt());
             }
+        }
+    }
+
+    @Test
+    void buildTurnInputLines_emptyCellsAndSpots_canBeReadLikeWaitBot() {
+        Board b = new Board(64);
+        b.placeCell(0, 0, 0);
+        b.energy[0] = 1;
+        b.energy[1] = 2;
+
+        VisibleState vs = GameLogic.getVisibleEntities(b, 0);
+        List<String> body = GameLogic.buildTurnInputLines(vs);
+
+        List<String> all = new ArrayList<>();
+        all.add(b.energy[0] + " " + b.energy[1]);
+        all.addAll(body);
+
+        String joined = String.join("\n", all) + "\n";
+        try (Scanner in = new Scanner(joined)) {
+            assertEquals(1, in.nextInt());
+            assertEquals(2, in.nextInt());
+            assertEquals(1, in.nextInt());
+            in.nextInt();
+            in.nextInt();
+            assertEquals(0, in.nextInt());
+            assertEquals(0, in.nextInt());
             assertFalse(in.hasNextInt());
         }
     }
