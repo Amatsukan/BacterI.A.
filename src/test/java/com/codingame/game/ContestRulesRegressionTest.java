@@ -36,13 +36,43 @@ class ContestRulesRegressionTest {
     }
 
     @Test
-    void multiActionOrder_expandThenExpandUsesFirstCell() {
+    void sameTurnExpandChainIsNotAllowedUnderPhaseSnapshot() {
         Board b = new Board(GameConfig.BOARD_SIZE);
         b.placeCell(0, 5, 5);
         b.energy[0] = 20;
-        assertTrue(ActionResolver.resolveExpand(b, 0, 5, 6));
-        assertTrue(ActionResolver.resolveExpand(b, 0, 6, 6));
+        b.placeCell(1, GameConfig.BOARD_SIZE - 1, GameConfig.BOARD_SIZE - 1);
+        b.energy[1] = 20;
+        TurnProcessor.processTurn(
+            b,
+            1,
+            java.util.Arrays.asList(
+                new TurnProcessor.PlayerSubmission(0, "P0", "EXPAND 5 6;EXPAND 6 6"),
+                new TurnProcessor.PlayerSubmission(1, "P1", "WAIT")
+            ),
+            s -> {}
+        );
+        assertTrue(b.belongsTo(0, 5, 6));
         assertTrue(b.belongsTo(0, 6, 6));
+    }
+
+    @Test
+    void sameTurnExpandCannotUseNewlyCreatedChainOnlyCell() {
+        Board b = new Board(GameConfig.BOARD_SIZE);
+        b.placeCell(0, 5, 5);
+        b.placeCell(1, GameConfig.BOARD_SIZE - 1, GameConfig.BOARD_SIZE - 1);
+        b.energy[0] = 20;
+        b.energy[1] = 20;
+        TurnProcessor.processTurn(
+            b,
+            1,
+            java.util.Arrays.asList(
+                new TurnProcessor.PlayerSubmission(0, "P0", "EXPAND 6 6;EXPAND 7 7"),
+                new TurnProcessor.PlayerSubmission(1, "P1", "WAIT")
+            ),
+            s -> {}
+        );
+        assertTrue(b.belongsTo(0, 6, 6));
+        assertFalse(b.belongsTo(0, 7, 7), "second expand cannot chain from same-turn new cell");
     }
 
     @Test

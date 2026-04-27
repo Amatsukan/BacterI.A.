@@ -45,4 +45,7 @@ public final class GameConfig {
     public static final int MIN_SPOT_DISTANCE = 5;
     /** Chebyshev distance from (0,0) for first-half spot candidates; mirror covers P1 corner. */
     public static final int MIN_SPAWN_CLEARANCE = 4;
+
+    /** Enables verbose per-turn structured state dumps via -Ddebug=true. */
+    public static final boolean DEBUG = Boolean.getBoolean("debug");
 }

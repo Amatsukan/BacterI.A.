@@ -50,6 +50,30 @@ public final class ActionParser {
         return actions;
     }
 
+    public static List<TypedAction> parseTypedActions(String line, int playerIndex) {
+        List<Action> parsed = parseActions(line);
+        List<TypedAction> actions = new ArrayList<>(parsed.size());
+        for (Action a : parsed) {
+            switch (a.type) {
+                case EXPAND:
+                    actions.add(new ExpandAction(playerIndex, a.x, a.y));
+                    break;
+                case ATTACK:
+                    actions.add(new AttackAction(playerIndex, a.x, a.y));
+                    break;
+                case AUTOPHAGY:
+                    actions.add(new AutophagyAction(playerIndex, a.x, a.y));
+                    break;
+                case WAIT:
+                    actions.add(new WaitAction(playerIndex));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported action type: " + a.type);
+            }
+        }
+        return actions;
+    }
+
     private static Action parseSingleAction(String token) {
         String[] p = token.split("\\s+");
         ActionType type;

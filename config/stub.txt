@@ -32,4 +32,11 @@ sType: spot type code
 sEnergy: remaining energy in the spot
 
 OUTPUT
-Up to 5 actions separated by ; (EXPAND x y, ATTACK x y, AUTOPHAGY x y, WAIT). Applied left-to-right; invalid EXPAND/ATTACK still cost energy.
+Up to 5 actions separated by ; (EXPAND x y, ATTACK x y, AUTOPHAGY x y, WAIT).
+Resolution model (deterministic):
+1) collect both players output lines
+2) parse and validate both
+3) resolve by action phase: EXPAND -> ATTACK -> AUTOPHAGY -> WAIT
+4) apply passive nutrient extraction
+5) check victory
+Invalid EXPAND/ATTACK still cost energy when affordable.

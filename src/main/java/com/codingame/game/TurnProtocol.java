@@ -10,38 +10,38 @@ public final class TurnProtocol {
 
     private TurnProtocol() {}
 
-    public static List<String> buildTurnInputLines(VisibleState vs) {
+    public static List<String> buildTurnInputLines(TurnInput input) {
         List<String> lines = new ArrayList<>();
-        lines.add(String.valueOf(vs.myCells.size()));
-        for (Board.Point c : vs.myCells) {
+        lines.add(String.valueOf(input.myCells.size()));
+        for (Coord c : input.myCells) {
             lines.add(c.x + " " + c.y);
         }
-        lines.add(String.valueOf(vs.oppCells.size()));
-        for (Board.Point c : vs.oppCells) {
+        lines.add(String.valueOf(input.oppCells.size()));
+        for (Coord c : input.oppCells) {
             lines.add(c.x + " " + c.y);
         }
-        lines.add(String.valueOf(vs.visibleSpots.size()));
-        for (Board.NutrientSpot s : vs.visibleSpots) {
-            lines.add(s.x + " " + s.y + " " + s.type.code + " " + s.remainingEnergy);
+        lines.add(String.valueOf(input.visibleSpots.size()));
+        for (SpotInfo s : input.visibleSpots) {
+            lines.add(s.x + " " + s.y + " " + s.typeCode + " " + s.remainingEnergy);
         }
         return lines;
     }
 
-    public static List<String> buildInitInputLines(Board board, int playerIdx) {
-        int half = board.size / 2;
+    public static List<String> buildInitInputLines(GameStateSnapshot snapshot, int playerIdx) {
+        int half = snapshot.boardSize / 2;
         boolean isP0 = (playerIdx == 0);
         List<String> lines = new ArrayList<>();
-        lines.add(board.size + " " + playerIdx);
-        List<Board.NutrientSpot> ownHalfSpots = new ArrayList<>();
-        for (Board.NutrientSpot s : board.spots) {
+        lines.add(snapshot.boardSize + " " + playerIdx);
+        List<SpotInfo> ownHalfSpots = new ArrayList<>();
+        for (SpotInfo s : snapshot.spots) {
             boolean ownHalf = isP0 ? (s.x < half) : (s.x >= half);
             if (ownHalf) {
                 ownHalfSpots.add(s);
             }
         }
         lines.add(String.valueOf(ownHalfSpots.size()));
-        for (Board.NutrientSpot s : ownHalfSpots) {
-            lines.add(s.x + " " + s.y + " " + s.type.code);
+        for (SpotInfo s : ownHalfSpots) {
+            lines.add(s.x + " " + s.y + " " + s.typeCode);
         }
         return lines;
     }

@@ -144,8 +144,8 @@
           <code style="background:#161b22; padding:2px 6px; border-radius:3px">EXPAND 1 0; EXPAND 0 1; WAIT</code>
         </p>
         <p style="margin-top:10px; color:#8b949e; font-size:13px">
-          Actions on your line are applied <b>strictly in order from left to right</b>.
-          Each action uses the board state produced by the previous action on the same line.
+          The referee first collects both players lines, then resolves by global action phase:
+          <b>EXPAND</b> &rarr; <b>ATTACK</b> &rarr; <b>AUTOPHAGY</b> &rarr; <b>WAIT</b>.
         </p>
       </div>
 
@@ -184,13 +184,16 @@
     <h1><span class="icon icon-expert">&nbsp;</span><span>Advanced Details</span></h1>
     <div class="statement-expert-content">
       <ul style="line-height:1.8">
-        <li>Each turn, <b>all players receive their full input</b> before any program runs
-            for that turn. After both outputs are read, the referee resolves actions in
-            <b>ascending player index</b> (<b>Player&nbsp;0</b> entire line first, then <b>Player&nbsp;1</b>).
-            Resolution order is <b>not</b> based on response time. Within one player line,
-            actions resolve left-to-right.</li>
-        <li>If both players EXPAND into the <b>same empty cell</b>, the
-            first-resolved player claims it.</li>
+        <li>Each turn, <b>all players receive input and output is collected</b> before any
+            action is resolved. Resolution order is fixed by phase:
+            <b>EXPAND</b>, then <b>ATTACK</b>, then <b>AUTOPHAGY</b>, then <b>WAIT</b>.</li>
+        <li>If both players EXPAND into the <b>same empty cell</b>, the winner is the player with
+            the highest adjacent allied-neighbor count around that target (from phase snapshot).
+            If still tied, lower player index wins.</li>
+        <li>EXPAND adjacency and occupancy are validated on the phase snapshot; chain-expanding
+            from newly created cells in the same turn is not possible.</li>
+        <li>ATTACK majority is computed from the attack-phase snapshot, then successful captures
+            are applied deterministically by target coordinate order.</li>
         <li>A failed EXPAND (occupied or not adjacent) <b>still costs</b> energy.</li>
         <li>A failed ATTACK (no numerical majority) <b>still costs</b> energy.</li>
         <li>A failed AUTOPHAGY (not your cell) costs nothing and gains nothing.</li>
@@ -253,8 +256,8 @@
           <code style="background:#161b22; padding:2px 6px; border-radius:3px">EXPAND 1 0; ATTACK 3 4; WAIT</code>
         </p>
         <p style="margin-top:8px; color:#8b949e; font-size:13px">
-          Execution order: left-to-right on your line; then the other player&rsquo;s full line
-          (see Advanced Details). Invalid <action>EXPAND</action> / <action>ATTACK</action> still consume energy.
+          Execution order is deterministic and phase-based (see Advanced Details).
+          Invalid <action>EXPAND</action> / <action>ATTACK</action> still consume energy when affordable.
         </p>
       </div>
     </div>
@@ -277,6 +280,10 @@
   <div class="statement-section statement-examples">
     <h1><span class="icon icon-example">&nbsp;</span><span>Example Turn</span></h1>
     <div class="statement-examples-content">
+      <div style="margin-bottom:12px; color:#8b949e">
+        Map coordinates: <b>(0,0)</b> is top-left, <b>x</b> grows to the right, <b>y</b> grows downward.
+        Player 0 starts in the top-left corner and Player 1 in the bottom-right corner.
+      </div>
       <div style="margin-bottom:12px">
         <b>Turn 1 input (Player 0):</b>
       </div>
@@ -297,6 +304,13 @@
         You spend <const>4</const> energy to place two new cells.
         Energy drops to <const>11</const>.
       </p>
+
+      <div style="margin-top:14px"><b>Invalid action examples</b></div>
+      <ul style="line-height:1.7">
+        <li><code>EXPAND 10 10</code> on a non-adjacent cell: fails and still costs <const>2</const>.</li>
+        <li><code>ATTACK 4 4</code> without numerical superiority: fails and still costs <const>2</const>.</li>
+        <li><code>AUTOPHAGY 4 4</code> on a cell you do not own: fails, no gain, no cost.</li>
+      </ul>
     </div>
   </div>
 

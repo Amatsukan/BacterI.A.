@@ -2,6 +2,7 @@
  * BacterI.A. — reference player (JavaScript) for the CodinGame IDE.
  * Use print() for actions (stdout). console.log does not count as player output.
  * Reads follow config/stub.txt (same order as WaitBot.java).
+ * Referee resolves both players in deterministic phases (EXPAND -> ATTACK -> AUTOPHAGY -> WAIT).
  */
 
 readline() // mapSize myIndex

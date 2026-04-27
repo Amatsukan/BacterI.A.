@@ -19,6 +19,10 @@ public final class GameLogic {
         return ActionParser.parseActions(line);
     }
 
+    public static List<TypedAction> parseTypedActions(String line, int playerIndex) {
+        return ActionParser.parseTypedActions(line, playerIndex);
+    }
+
     public static int applyEnergyCost(int energy, ActionParser.ActionType type) {
         return EnergyService.applyEnergyCost(energy, type);
     }
@@ -59,12 +63,12 @@ public final class GameLogic {
         return FogOfWarService.getVisibleEntities(board, playerIdx);
     }
 
-    public static List<String> buildTurnInputLines(VisibleState vs) {
-        return TurnProtocol.buildTurnInputLines(vs);
+    public static List<String> buildTurnInputLines(TurnInput input) {
+        return TurnProtocol.buildTurnInputLines(input);
     }
 
-    public static List<String> buildInitInputLines(Board board, int playerIdx) {
-        return TurnProtocol.buildInitInputLines(board, playerIdx);
+    public static List<String> buildInitInputLines(GameStateSnapshot snapshot, int playerIdx) {
+        return TurnProtocol.buildInitInputLines(snapshot, playerIdx);
     }
 
     public static boolean resolveExpand(Board board, int playerIdx, int x, int y) {

@@ -25,8 +25,9 @@ class TurnInputProtocolTest {
         b.energy[0] = 7;
         b.energy[1] = 9;
 
-        VisibleState vs = GameLogic.getVisibleEntities(b, 0);
-        List<String> body = GameLogic.buildTurnInputLines(vs);
+        GameStateSnapshot snapshot = GameStateSnapshot.fromBoard(b, 1);
+        PlayerView view = FogOfWarService.buildPlayerView(snapshot, 0);
+        List<String> body = GameLogic.buildTurnInputLines(view.toTurnInput());
 
         List<String> all = new ArrayList<>();
         all.add(b.energy[0] + " " + b.energy[1]);
@@ -66,9 +67,10 @@ class TurnInputProtocolTest {
         Board b = new Board(64);
         b.spots.add(new Board.NutrientSpot(10, 20, Board.SpotType.SMALL));
         b.spots.add(new Board.NutrientSpot(53, 43, Board.SpotType.MEDIUM));
+        GameStateSnapshot snapshot = GameStateSnapshot.fromBoard(b, 0);
 
         for (int myIndex : new int[] {0, 1}) {
-            List<String> lines = GameLogic.buildInitInputLines(b, myIndex);
+            List<String> lines = GameLogic.buildInitInputLines(snapshot, myIndex);
             String joined = String.join("\n", lines) + "\n";
             try (Scanner in = new Scanner(joined)) {
                 int mapSize = in.nextInt();
@@ -102,8 +104,9 @@ class TurnInputProtocolTest {
         b.energy[0] = 1;
         b.energy[1] = 2;
 
-        VisibleState vs = GameLogic.getVisibleEntities(b, 0);
-        List<String> body = GameLogic.buildTurnInputLines(vs);
+        GameStateSnapshot snapshot = GameStateSnapshot.fromBoard(b, 1);
+        PlayerView view = FogOfWarService.buildPlayerView(snapshot, 0);
+        List<String> body = GameLogic.buildTurnInputLines(view.toTurnInput());
 
         List<String> all = new ArrayList<>();
         all.add(b.energy[0] + " " + b.energy[1]);

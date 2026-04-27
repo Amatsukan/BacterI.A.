@@ -1,6 +1,6 @@
 # BacterI.A.
 
-BacterI.A. is a 1v1 multiplayer CodinGame-style contest. Two programs read the same text protocol, send one line of actions per turn, and the referee updates the world in a fixed order so replays stay deterministic.
+BacterI.A. is a 1v1 multiplayer CodinGame-style contest. Two programs read the same text protocol, send one line of actions per turn, and the referee resolves both outputs through a deterministic multi-phase pipeline.
 
 ## What is in this repository
 
@@ -53,10 +53,12 @@ The reference boss needs Python 3. The executable is chosen in this order:
 
 Main Java types you will touch when changing rules:
 
-- Referee.java orchestrates turns (send input, execute bots, resolve actions).
-- TurnProtocol.java builds lines that must match stub.txt.
+- Referee.java orchestrates I/O and delegates to the turn state machine.
+- TurnProcessor.java is the explicit 6-stage turn pipeline.
+- TurnProtocol.java only consumes immutable DTOs (`GameStateSnapshot`/`PlayerView`/`TurnInput`).
 - GameConfig.java holds numeric constants (turn limit, costs, vision radius, map generation).
-- ActionParser.java parses the player output line.
+- ActionParser.java parses player output to typed actions.
+- ExpandAction/AttackAction/AutophagyAction/WaitAction each implement validate/cost/execute.
 - ActionResolver.java, EnergyService.java, FogOfWarService.java, VictoryChecker.java, MapGenerator.java, GridUtils.java hold the rest of the logic.
 
 ## Tests
@@ -64,6 +66,11 @@ Main Java types you will touch when changing rules:
 - TurnInputProtocolTest checks that init and turn text matches the stub so bots do not block on read while the referee waits.
 - GameLogicTest covers parsing, energy, map, fog, combat, and victory.
 - ContestRulesRegressionTest covers a few contest promises (for example invalid expand still spends energy, seeded map).
+- TurnProcessorConflictRulesTest covers simultaneous conflict rules.
+- TurnProcessorDeterminismTest enforces replay determinism under fixed seeds.
+- TurnProcessorFuzzTest performs random invalid-action fuzzing and invariant checks.
+- MassSimulationBalanceTest runs large random-vs-random batches (set `-Dbacteria.mass.games=10000` for 10k).
+- EnginePerformanceBaselineTest measures baseline throughput (set `-Dbacteria.perf.games=5000` for deeper runs).
 
 Extra JSON cases for the CodinGame toolchain live under config/ (for example test_smoke.json and validator_turn_limit.json).
 
@@ -82,7 +89,8 @@ AUTOPHAGY x y
 WAIT
 ```
 
-Actions run left to right on your line. The referee applies player 0 full line, then player 1 full line. Invalid EXPAND or ATTACK can still cost energy where the statement says so. Read config/statement_en.html before arguing with the referee.
+Both players submit one line, then the referee resolves phases in this order:
+EXPAND -> ATTACK -> AUTOPHAGY -> WAIT. Invalid EXPAND or ATTACK still cost energy where the statement says so. Read config/statement_en.html before arguing with the referee.
 
 ## Credits
 

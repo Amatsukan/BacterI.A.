@@ -28,9 +28,10 @@ public class Referee extends AbstractReferee {
      * Sends initialization lines in the exact order defined by {@code config/stub.txt}.
      */
     private void sendInitInput() {
+        GameStateSnapshot snapshot = GameStateSnapshot.fromBoard(board, 0);
         for (Player player : sortedByIndex(gameManager.getPlayers())) {
             int idx = player.getIndex();
-            for (String line : TurnProtocol.buildInitInputLines(board, idx)) {
+            for (String line : TurnProtocol.buildInitInputLines(snapshot, idx)) {
                 player.sendInputLine(line);
             }
         }
@@ -47,6 +48,7 @@ public class Referee extends AbstractReferee {
         int e1 = GameLogic.computeStartingEnergy(board, size - 1, size - 1);
         board.energy[0] = e0;
         board.energy[1] = e1;
+        BoardInvariantChecker.assertValid(board, "init");
 
         gameManager.setMaxTurns(GameConfig.MAX_TURNS);
         gameManager.setTurnMaxTime(GameConfig.SDK_TURN_MAX_MS);
@@ -61,21 +63,25 @@ public class Referee extends AbstractReferee {
 
     @Override
     public void gameTurn(int turn) {
-        // Per-turn lines after the first line match config/stub.txt (see TurnProtocol.buildTurnInputLines).
+        // 1) Input generation
+        GameStateSnapshot preTurnSnapshot = GameStateSnapshot.fromBoard(board, turn);
         for (Player player : sortedByIndex(gameManager.getActivePlayers())) {
             int idx = player.getIndex();
-            int oppIdx = 1 - idx;
-            VisibleState vs = FogOfWarService.getVisibleEntities(board, idx);
-            player.sendInputLine(board.energy[idx] + " " + board.energy[oppIdx]);
-            for (String line : TurnProtocol.buildTurnInputLines(vs)) {
+            PlayerView playerView = FogOfWarService.buildPlayerView(preTurnSnapshot, idx);
+            TurnInput input = playerView.toTurnInput();
+            player.sendInputLine(input.myEnergy + " " + input.oppEnergy);
+            for (String line : TurnProtocol.buildTurnInputLines(input)) {
                 player.sendInputLine(line);
             }
         }
+
+        // 2) Players execute
         for (Player player : sortedByIndex(gameManager.getActivePlayers())) {
             player.execute();
         }
 
-        // Resolve in ascending player index: player 0's full action list, then player 1's (deterministic).
+        // 3) Collect raw outputs
+        List<TurnProcessor.PlayerSubmission> submissions = new ArrayList<>();
         for (Player player : sortedByIndex(gameManager.getActivePlayers())) {
             int idx = player.getIndex();
             try {
@@ -87,40 +93,8 @@ public class Referee extends AbstractReferee {
                     gameManager.endGame();
                     return;
                 }
-                List<ActionParser.Action> actions = ActionParser.parseActions(outputs.get(0));
-
-                for (ActionParser.Action action : actions) {
-                    if (!EnergyService.canAfford(board.energy[idx], action.type)) {
-                        gameManager.addToGameSummary(
-                            player.getNicknameToken() + ": insufficient energy for " + action.type);
-                        continue;
-                    }
-
-                    switch (action.type) {
-                        case EXPAND:
-                            board.energy[idx] = EnergyService.applyEnergyCost(board.energy[idx], action.type);
-                            if (!ActionResolver.resolveExpand(board, idx, action.x, action.y)) {
-                                gameManager.addToGameSummary(
-                                    player.getNicknameToken() + ": invalid EXPAND " + action.x + " " + action.y);
-                            }
-                            break;
-                        case ATTACK:
-                            board.energy[idx] = EnergyService.applyEnergyCost(board.energy[idx], action.type);
-                            int reward = ActionResolver.resolveAttack(board, idx, action.x, action.y);
-                            board.energy[idx] += reward;
-                            break;
-                        case AUTOPHAGY:
-                            if (ActionResolver.resolveAutophagy(board, idx, action.x, action.y)) {
-                                board.energy[idx] = EnergyService.applyEnergyCost(board.energy[idx], action.type);
-                            } else {
-                                gameManager.addToGameSummary(
-                                    player.getNicknameToken() + ": invalid AUTOPHAGY " + action.x + " " + action.y);
-                            }
-                            break;
-                        case WAIT:
-                            break;
-                    }
-                }
+                submissions.add(new TurnProcessor.PlayerSubmission(
+                    idx, player.getNicknameToken(), outputs.get(0)));
             } catch (TimeoutException e) {
                 player.deactivate("Timeout!");
                 player.setScore(-1);
@@ -136,11 +110,19 @@ public class Referee extends AbstractReferee {
             }
         }
 
-        EnergyService.passiveNutrientExtraction(board);
+        // 4-6) Parse, validate, resolve, post-effects, victory
+        TurnProcessor.TurnOutcome outcome;
+        try {
+            outcome = TurnProcessor.processTurn(board, turn, submissions, gameManager::addToGameSummary);
+        } catch (Exception e) {
+            gameManager.addToGameSummary("Referee fail-fast: " + e.getMessage());
+            gameManager.endGame();
+            return;
+        }
+
         view.update(board, turn);
 
-        int result = VictoryChecker.checkGameOver(board, turn);
-        if (result != -2) {
+        if (outcome.victoryResult != -2) {
             gameManager.endGame();
         }
     }
